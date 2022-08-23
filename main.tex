@@ -1,0 +1,851 @@
+\documentclass[a4paper,12pt,sort&compress]{article}
+\renewcommand{\baselinestretch}{1.5}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx,subcaption,siunitx,multirow,multicol,hyperref,geometry,amsmath,amssymb,tikz,circuitikz,gensymb,bigfoot,filecontents}
+\usepackage[T1]{fontenc}
+\usepackage[numbered,framed]{matlab-prettifier}
+\usepackage{xurl}
+% references for the paper
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{filecontents}
+
+\let\ph\mlplaceholder % shorter macro
+\lstMakeShortInline"
+\lstset{
+  style              = Matlab-editor,
+  basicstyle         = \mlttfamily,
+  escapechar         = ",
+  mlshowsectionrules = true,
+}
+
+\interfootnotelinepenalty=10000
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \includegraphics[width=\linewidth]{loghi.png} % also works with logo.pdf
+    {\bfseries\Large
+       Università degli Studi di Padova \\
+       Department of Information Engineering\\
+        Master Thesis in Control Systems Engineering\\
+        \vskip2cm
+        TITOLO\\
+        \vskip2cm
+        \raggedright
+        Supervisor:
+        \vskip2cm
+        \raggedleft
+        Master Candidate: Matteo Grandin
+    }    
+    \vfill
+
+\end{titlepage}
+
+
+\section{Abstract}
+    
+    \newpage
+
+% Table of Contents
+\tableofcontents
+\newpage
+
+\section{Listing of figures}
+
+    \newpage
+
+
+\section{Acknowledgments}
+
+    Thank you thank you thank you thank you very much
+    \newpage
+
+
+\section{Introduction}
+
+    Spiegazione della struttura della tesi e dei metodi utilizzati.
+    \newpage
+
+
+\section{Context Analysis}
+
+\subsection{Problem Statement}
+    %Spiegazione del contesto della tesi e dei problemi che si vogliono risolvere.
+    This thesis project is placed in the context of autonomous vehicles and
+    autonomous driving: more specifically we want to target the problem of lane
+    following in a vehicle equipped with a frontal camera. In particular, we
+    want to estimate the heading error of the vehicle with respect to the center
+    of the lane and the structure of the road ahead of the vehicle, using only
+    local information about the car and the road. The idea behind the need of an
+    accurate estimation of these road parameters is that they can be used in a
+    standard control strategy to perform lane following or other driving
+    behaviors.
+
+    The objective is to design a system which satisfy a set of reasonable
+    constraint in a real drive situation:
+    \begin{itemize}
+        \item The system should be able to accurately estimate the car position and
+            orientation in the lane. The accuracy should be measurable and
+            quantifiable using some appropriate performance metrics.
+        \item The system should be able to estimate the structure of the lane
+            ahead using some appropriate parameters, with an accuracy measurable
+            and quantifiable using some appropriate performance metrics.
+        \item The system should operate in a real-time environment, with low
+            latency and high frequency, in order to be able to handle possible
+            obstacles and changes in the road.
+        \item The estimation process should only use local information about the
+            vehicle and the road, without the use of any other localization system
+            or map; in order to increase the robustness in a loss-of-signal
+            situation, and to mimic the way human drivers approach the same
+            task.
+    \end{itemize}
+
+\subsection{Scaled vehicle assembly}
+Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
+
+\subsection{Vehicle model and characterization of the heading error}
+    %Introduzione del modello fisico del veicolo + heading error + camera
+    The entire car assembly is composed of the vehicle and a frontal camera. The
+    camera is mounted on the vehicle in a fixed position, located in an elevated
+    point for better visibility and pointing ahead towards the road. The vehicle
+    is a standard car with 4-wheel drive, with standard suspensions and frontal
+    steering.
+
+    In the literature there exists several vehicle models, that span across a
+    wide range in complexity and degrees of freedom \citep{doi:10.1080/00423119508969086}. The more accurate
+    models are used when the vehicle is driving close to the limit conditions,
+    for example at very high speeds and accelerations in a racing scenario; the
+    less accurate, but simpler models can be used if the vehicle is driving at
+    low speeds in average conditions. In this thesis we will use a simple model,
+    and more specifically the \textit{bicycle model} \citep{7995816} to describe the vehicle,
+    the reason behind this choice is that we are interested in developing a
+    general framework that is focused on the vision system and basic physical
+    quantities of the vehicle like speed and steering angle; in addition to
+    this, in the model vehicle we were working on we were able to directly
+    control only the steering angle and the vehicle velocity. 
+
+    \subsubsection{The Bicycle Model}
+    The bicycle model represents the foundation for vehicle modelling,
+    the more complete models are build on top of this model by removing or
+    lightening some of its assumptions. 
+    The bicycle model takes a 4-wheel model and combines the front and rear
+    wheels respectively to form a 2-wheeled model (hence the name). We can
+    therefore deal with only 2 wheels and 1 steering angle instead of 4 wheels
+    and 2 steering angles. 
+    The bicycle model is based on the following assumptions:
+    \begin{itemize}
+        \item The vehicle is operating on a 2-dimensional plane. This is a reasonable assumption, it means that the vehicle
+        does not move in the vertical direction.
+        \item The vehicle is a rigid body with its mass concentrated in the center of mass.
+        \item No-slip condition: there is no lateral or longitudinal slip in the
+        tires; therefore we can assume the velocity of the wheels acts in the same
+        direction that the wheel is facing in. 
+    \end{itemize}
+
+    The idea is to consider only the vehicle speed and steering angle as inputs,
+    and use the model to estimate the x and y position as wheel as the vehicle
+    heading direction using the model.
+
+    Using the aforementioned assumptions, it is possible to derive the following
+    equations of motion for the bicycle model:
+    \begin{align} 
+        \dot{x} &= v \cos \theta \\
+        \dot{y} &= v \sin \theta \\
+        \dot{\theta} &= \frac{v}{L} \tan \delta
+    \end{align}
+
+    with the following symbol definitions:
+    \begin{itemize} 
+        \item $\theta =$ vehicle yaw angle, i.e. heading direction
+        \item $L =$ wheelbase, the distance between the wheels
+        \item $\delta =$ steering angle
+        \item $v =$ vehicle speed
+    \end{itemize}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{bicycle_model.png}
+        \caption{Bicycle model}
+        \label{fig:bicycle_model}
+    \end{figure}
+
+    \subsubsection{Pure Pursuit and Heading Error}
+    Pure pursuit is a tracking algorithm that works by calculating the curvature that will move a vehicle
+    from its current position to some goal position. The whole point of the algorithm is to choose a goal
+    position that is some distance ahead of the vehicle on the path. The name pure pursuit comes from
+    the analogy that we use to describe the method. We tend to think of the vehicle as chasing a point
+    on the path some distance ahead of it - it is pursuing that moving point. That analogy is often used
+    to compare this method to the way humans drive. We tend to look some distance in front of the car
+    and head toward that spot. This lookahead distance changes as we drive to reflect the twist of the
+    road and vision occlusions\cite{coulter1992implementation}.
+
+    The heading error (HE) is the key parameter to be estimated, as it is the
+    starting point of the pure pursuit control strategy\citep{7796574,9368694}.
+    The HE is defined as the angle between the vehicle heading direction and the
+    line that connects the lookahead point and the center of rear axle of the
+    vehicle. The lookahead point is defined as the point on the path on a fixed (or
+    variable) distance ahead of the vehicle. 
+    \begin{align}
+        \delta=\tan^{-1}\left(\frac{L\dot{\theta}}{v}\right)=\tan^{-1}\left(\frac{L}{R}\right)=\tan^{-1}\left(\frac{2L\sin\left(\alpha\right)}{l_{c}}\right)
+    \end{align}
+
+    The distance of the lookahead point
+    is a delicate parameter, since a big value can lead to cutting curves at low
+    speed and a too small value can lead to unstable behaviors at higher speeds.
+    Moreover, the accuracy of the estimation is also affected by this distance,
+    since it becomes more difficult to identify the lines which are far ahead.
+    For these reasons an analysis on the lookahead distance is necessary. 
+
+    In the practical implementation used to generate the training datasets in
+    the simulator, we assume to have an \textit{optimal} path\footnote{The optimality of the path will be discussed in
+    more detail in later sections.} that follows the center of the lane. The
+    implementation follows the same approach explained in
+    \citep*{coulter1992implementation}; in particular, the basic steps of the
+    algorithm are:
+    \begin{enumerate}
+        \item Calculate the closest point $p_0$ on the path to the vehicle position,
+        using the standard euclidean distance.
+        \item Calculate the lookahead point on the path, using the lookahead
+        distance $l_c$ from $p_0$. In this case we consider the arc
+        length\footnote{The reasons behind the use of the arc length rather than
+        the standard euclidean distance is that the existence and uniqueness of
+        the lookahead point is guaranteed only by using the arc length.
+        Moreover, for small curvature paths, the metrics lead to very similar values.}
+        \item Convert the lookahead point to the vehicle coordinate system
+        \item Calculate the heading error
+    \end{enumerate}
+    It is important to note that this process makes use of the position and
+    orientation of the vehicle in the global frame of reference; therefore it
+    can be used only in a simulated environment. This is indeed the algorithm
+    used to generate the training datasets. 
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \caption{Heading Error}
+        \label{fig:heading_error}
+    \end{figure}
+
+    \subsubsection{Camera}
+    The camera is the main sensor used to perform the heading error estimation.
+    In the model car it is positioned about 20 cm above the ground. It is oriented 20 degrees downward in order to see also the closer
+    section of the road. The camera is a standard \textit{Raspberry Pi Camera}
+    module. The technical specifications of the camera are the following:
+    \begin{itemize}
+        \item Still resolution: 8 Megapixels
+        \item Video capture resolution: up to 1080p30, used at 640x480p at
+        ~30fps (max 90fps)
+        \item Focal length: 3.04 mm
+        \item Horizontal field of view: 62.2 degrees
+        \item Vertical field of view: 48.8 degrees
+        \item F-stop: 2.0
+    \end{itemize}
+    The native resolution used is 640x480 since it allows for a better
+    frame rate, however the images will be further reduced in size in order to
+    increase performance. The simulated camera is mounted in the exact same
+    position of the real one, and has been programmed to have the same field of
+    view and frame rate.  
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \caption{Example image from the camera}
+        \label{fig:camera_example}
+    \end{figure}
+    
+
+    \subsection{Simulation environment}
+    The simulation environment is a key component of the estimation process, it
+    is not directly related to the online estimation itself, but it is used to
+    generate the training datasets; the accuracy of the estimation is therefore
+    extremely correlated with the quality of the dataset and, consequently, with
+    the quality of the simulation. 
+
+    For the simulation environment, we use the \textit{Gazebo
+    simulator}\citep*{1389727}, which is a powerful simulator normally used in
+    robotics. The reasons behind the use of this simulator are the fact that
+    it's open source and does not require extreme hardware to run, moreover we
+    were able to use assets that were given to us by the organizers of the
+    challenge. In the following are listed the main characteristics of the
+    simulation environment:
+    \begin{itemize}
+        \item It is a physics-based simulator
+        \item The simulation is modular, allowing for the use of different
+        models 
+        \item \textit{Gazebo} is fully integrated with \textit{ROS}, this allows
+        for easy access to all the sensors and actuators of the simulated
+        vehicle and control of the simulation.
+        \item The basic environment is composed of the model of the car and the
+        streets, depending on the need it is possible to add other vehicles,
+        pedestrians, and ramps.
+        \item The car model is composed as a group of links/joints, with their
+        respective physical properties. All the virtual sensors and actuators are
+        mounted on the car model and are accessible through the \textit{ROS} network.
+        \item The virtual camera is mounted in the exact same position of the
+        real one, and it's configured to have the same field of view and frame
+        rate. The flow of images is easily accessible through \textit{ROS}.
+    \end{itemize}
+
+    The simulator has been run on a laptop with an \textit{Intel Core i7-7500U}
+    processor, an \textit{NVIDIA GeForce GTX 950M} graphics card and 16 GB of
+    RAM.
+    
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \caption{ Simulator image }
+        \label{fig:simulator}
+    \end{figure}
+
+
+
+\section{Optimal path}
+
+    \subsection{Why do we need a path to follow?}
+    The basic idea of having an \textit{optimal} path is being able to localize the vehicle on the
+    path and to sample the heading error looking at the path ahead. 
+
+    Since we are only interested in estimating the heading error with respect to the center of the
+    road it does not seem necessary to have an optimal path; however there are several reasons
+    why one would prefer a different path to the centerline. The first one is that the centerline
+    could be an infeasible trajectory to follow for the vehicle, with an aggressive curvature or
+    discontinuous first derivative. The second one is that the path
+    method is very easy to scale in situations where the centerline is not clear or defined, for
+    example when dealing with intersections or unmarked roads. The third is that it's possible to
+    have some degrees of control over the path, for example on the smoothness or the maximum
+    curvature. Moreover, the path concept is useful when planning far ahead in the future or when
+    considering obstacle avoidance. Finally, using a path is very convenient from the implementation point of
+    view, because it decouples the camera image from the localization and path tracking.
+
+    \subsection{Why clothoids}
+    Common path-planning methods usually generate obstacle-free path, but with no or very little concern
+    about path feasibility or optimality so that it is usually necessary to apply some kind of transform
+    algorithm to locally smooth such a path. Various path-smoothing algorithms are proposed in the
+    literature: cubic splines \citep*{kanayama1988smooth}, intrinsic splines
+    \citep*{delingette1991trajectory}, Bezier's curves \citep*{segovia1991comparative}, quintic
+    Bezier splines \citep*{lau2009kinodynamic}, and clothoids. The main advantage of clothoids over
+    other smoothing methods in path-planning
+    applications is linear change of their curvature, which is of great importance for transportation of
+    people or heavy and sensitive loads since it prevents abrupt changes in the centripetal acceleration
+    and forces experienced by a vehicle increasing driving comfort. Clothoids are very attractive in
+    path-smoothing applications as they are easy to follow because of their linearly changing
+    curvature \citep*{shanmugavel2010co}. 
+
+    Clothoids also have advantages over other smoothing techniques in sense of vehicles optimal motion
+    planning—by applying the Maximum Principle from the optimal control theory, for forward
+    motion and differential drive vehicle, one can find that the necessary condition for
+    trajectory to be time optimal yields clothoids \citep*{388788}. Further, Boissonnat  et al.
+    \citep*{BOISSONNAT1999613}  studied
+    the shortest plane paths joining two given positions with given tangent angles and
+    curvatures along which the tangent angle and the curvature are continuous and the derivative
+    of the curvature is bounded. They showed that at a point where such a path is of class $\mathcal{C}^3 $,
+    it must be locally a piece of a clothoid or a line segment. Similarly, Fraichard and Scheuer
+    \citep{1362698} showed that with requirements of continuous curvature and bounded both curvature and its
+    derivative, the shortest path consist of line segments, circular arcs, and clothoids \citep*{6646277}.
+
+    \subsection{Clothoid definition}
+    A Clothoid, also known as Euler or Cornu spiral, is a plane, invariant spiral curve defined in
+    parameter form. As explained in \citep*{7962257} Its curvature $\kappa$ can be expressed as a linear function of its arc length
+    $s$:
+    \begin{equation} 
+        \kappa (s)=\kappa _0 + \sigma s, \quad \kappa _0, \, \sigma \in \mathbb {R} 
+    \end{equation}
+    where $\sigma$ is the sharpness of the clothoid and $\kappa _0$ is the initial curvature at
+    $s=0$. The tangent or winding angle $\theta$ with respect to its arc length is given as:
+    \begin{equation} 
+        \theta (s)=\theta _0+\kappa _0 s+\frac{\sigma s^2}{2}, \quad \theta _0, \, \kappa _0, \, \sigma \in \mathbb {R} 
+    \end{equation}
+    where $\theta _0$ is the initial tangent angle at $s=0$. Thus, a general clothoid can be
+    expressed in paremetric form as in \citep*{nutbourne1972curvature}:
+    \begin{equation} 
+        \mathbf {F}(s) = 
+        {\left(
+            \begin{array}
+                {c} x_0+\int _0^s \cos \left(\theta _0+\kappa _0 u +\frac{\sigma u^2}{2}\right) \, du \\ 
+                y_0+\int _0^s \sin \left(\theta _0+\kappa _0 u +\frac{\sigma u^2}{2}\right) \, du \\ 
+            \end{array}
+        \right)} 
+    \end{equation}
+    Based on the above definition, it is possible to define the elementary clothoid segment $\mathbf
+    {F}_{{\mathcal {E}}}(s)$ with $\sigma = \sigma _\mathcal{E} > 0$, $s \geq 0$, $\kappa _0 \geq
+    0$, $\theta _0 = 0$, $(x_0, y_0) = (0,0)$ and $\theta \in (0, \pi/2]$
+    \begin{equation} 
+        \mathbf {F}_{{\mathcal {E}}}(s)= \sqrt{\frac{\pi }{\sigma _{{\mathcal {E}}}}} \mathbf {R} 
+        \left(
+            -\frac{\kappa _{0}^2}{2 \sigma _{{\mathcal {E}}}}
+        \right) 
+        {\left(
+            \begin{array}
+                {c}\delta _c(s) \\ \delta _s(s)\\ 
+            \end{array}
+        \right)} 
+    \end{equation}
+    where $\delta _c(s) = C_f (\frac{\sigma _{{\mathcal {E}}}s+\kappa_0}{\sqrt{\pi \sigma
+    _{{\mathcal {E}}}}}) - C_f (\frac{\kappa_0}{\sqrt{\pi \sigma _{{\mathcal {E}}}}})$ and
+    $\delta_s(s) = S_f (\frac{\sigma _{{\mathcal {E}}}s+\kappa_0}{\sqrt{\pi \sigma
+    _{{\mathcal {E}}}}}) - S_f (\frac{\kappa_0}{\sqrt{\pi \sigma _{{\mathcal {E}}}}})$. Here,
+    $\mathbf {R}(\theta)$ is the standard planar rotation matrix, and $C_f(x)$ and $S_f(x)$ are a
+    pair of nonnegative functions named Fresnel integrals \citep*{41470}:
+    \begin{equation} \label{eq:clothoid}
+        C_f(s)=\int _0^s \cos 
+        \left(
+            \frac{\pi \xi ^2}{2}
+        \right) 
+        \, 
+        d\xi, \, S_f(s)=\int _0^s \sin 
+        \left(
+            \frac{\pi \xi ^2}{2}
+        \right) 
+        \, 
+        d\xi . 
+    \end{equation}
+
+    \subsection{Implementation}
+
+    The context of our particular application is the following: we are given a map of a scaled city,
+    with roads, intersections, roundabouts, crosswalks, etc... Alongside with the map we are also given
+    a set of waypoints in the form of a directed graph. Every waypoint corresponds to an $(x,y)$ position on
+    the map, more specifically to point in the center of a lane. All the waypoints are placed at
+    about $30 cm$ from each other. Every waypoint also incorporate a list of edges that
+    connects it to other waypoints, in such a way that only consecutive waypoints are connected by an
+    edge and only if they follow they same lane, the only exceptions being the points associated to
+    roundabouts and intersections as well as the start point and the end point. 
+    
+    The goal of the algorithm is to take 2 waypoints as input and return a path that connects them.
+    To achieve this goal, we start by finding the shortest path in the graph of waypoints that
+    connects them\footnote{We restrict ourselves to the case where at least one path exists between
+    any two waypoints, which was always true in our scenario, except if we considered the end point as
+    starting point}; to do this we use the Dijkstra algorithm \citep*{dijkstra1959note}. 
+    
+    The second and last step to create the \textit{optimal} path is to fit clothoid segments between the
+    waypoints of the shortest path. Since the Fresnel integrals in equation (\ref*{eq:clothoid}) are two transcendental functions,
+    they can't be solved analytically, however there are several approximation
+    methods in the literature that achieves good results \citep*{6646277,7962257,4543548}. In our
+    implementation we used the python library \textit{pyclothoids} \citep*{pyclothoids}, which is a python
+    wrapper of the C++ library by Bertolazzi \citep*{https://doi.org/10.1002/mma.3114, BERTOLAZZI201899,
+    https://doi.org/10.1002/mma.4700, doi:10.1137/18M1200439}. 
+    In figure \ref{fig:path} it is possible to see the result of the algorithm, the path is designed
+    to cross most of the waypoints.
+
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=\linewidth]{full_path.png}
+        \caption{Map and waypoints, with the optimal path passing through most of the waypoints}
+        \label{fig:path}
+    \end{figure}
+
+
+\section{Performance metrics}
+
+    Definizione delle metriche di  performance
+
+    Read code not pdf here...
+    -L2 norm that we have both in simulation and hopefully in the real world thanks to a precise
+    localization system (MG idea)
+    -The ones explained in 'On Performance Evaluation Metrics for Lane Estimation'
+    -The ones explained in section 5 of 'Video-based lane estimation and tracking for driver assistance: survey, system, and evaluation'
+        -they used mean absolute error in position, standard deviation of error in position, standard
+        deviation of error in rate of change of lateral position
+            the idea of the rate of change is very interesting
+    -We should consider the 2 cases: the case of the heading error estimation and the case of the
+    actual lane detection, there should be 2 different performance metrics for each one of them
+    -We should consider the fact that we have the simulation environment and evaluate the performance
+    in easy conditions, namely when the tracking is near the center of the road, or when the car is
+    sliding left and right
+    -we should evaluate the continuity of the output as a performance measurement
+    -also we should distinguish the performance metric of the road estimation, from the whole
+    estimation+tracking performance, in this paper we are interested only in the first one. 
+    -check papers: \url{https://ieeexplore.ieee.org/document/6728473},
+    \url{https://ieeexplore.ieee.org/document/9398517}, which are more about the deep learning
+    aspect
+    
+    useful papers:
+    \url{https://ieeexplore.ieee.org/abstract/document/6977166, https://link.springer.com/article/10.1007/s00138-011-0404-2, https://ieeexplore.ieee.org/document/1603550, https://ieeexplore.ieee.org/document/6728473,  https://ieeexplore.ieee.org/document/9398517} 
+
+
+\newpage
+
+\section{Neural Network Estimation}
+
+\subsection{Data Collecting}
+    Discussione su tecniche e metodi di raccolta dei dati per il training nel
+    simulatore, possibili varianti, tipi di hyperparamters...
+    
+
+
+
+
+\subsection{Training}
+Discussione sulla baseline usata nella BFMC, dettagli dell'architettura, dei
+vari processi, analisi degli hyperparamters
+
+Poi discussione sulle estensioni:
+\begin{itemize}
+    \item multiple frames
+    \item time coherence
+    \item continuity
+    \item multiple points estimation, path ahead
+    \item variable speed
+    \item state estimation
+    \item reducing dataset size
+\end{itemize}
+
+\section{Results}
+Analisi dei risultati in relazione a hyperparamters, optimal path, quantita' di
+dati, randomicita', metriche di prestazione differenti, facilita' di
+implementazione e di distribuzione, etc...
+
+\subsection{Network analysis}
+Analisi delle Networks
+
+
+\newpage
+\section{Conclusion and Future Work}
+end
+
+
+
+
+\newpage
+\section{Appendix}
+consider adding full derivation of the bicycle model \url{https://www.youtube.com/watch?v=HqNdBiej23I&ab_channel=Prof.GeorgSchildbach%2CUniversityofLuebeck}
+\url{https://thomasfermi.github.io/Algorithms-for-Automated-Driving/Control/BicycleModel.html}
+\url{http://code.eng.buffalo.edu/dat/sites/model/bicycle.html#:~:text=motion%20under%20the%20assumption%20of,hard%20braking%20and%20steering%20maneuvers.}
+\url{https://ieeexplore.ieee.org/document/9311987}
+
+consider adding derivation of the pure pursuit
+\url{https://ieeexplore.ieee.org/document/9368694}
+
+
+\newpage
+
+% references %note: delete the .bib file every time uadd a reference
+\begin{filecontents}{References.bib}
+    %vehicle model
+    @article{doi:10.1080/00423119508969086,
+        author = { Dirk E.   Smith  and  John M. Starkey},
+        title = {Effects of Model Complexity on the Performance of Automated Vehicle Steering Controllers: Model Development, Validation and Comparison},
+        journal = {Vehicle System Dynamics},
+        volume = {24},
+        number = {2},
+        pages = {163-181},
+        year  = {1995},
+        publisher = {Taylor & Francis},
+        doi = {10.1080/00423119508969086},
+        URL = {https://doi.org/10.1080/00423119508969086},
+        eprint = { https://doi.org/10.1080/00423119508969086}
+    }
+    @INPROCEEDINGS{7995816,
+        author={Polack, Philip and Altché, Florent and d'Andréa-Novel, Brigitte and de La Fortelle, Arnaud},
+        booktitle={2017 IEEE Intelligent Vehicles Symposium (IV)}, 
+        title={The kinematic bicycle model: A consistent model for planning feasible trajectories for autonomous vehicles?}, 
+        year={2017},
+        volume={},
+        number={},
+        pages={812-818},
+        doi={10.1109/IVS.2017.7995816}
+    }
+    @INPROCEEDINGS{9368694,
+        author={Huang, Yaofu and Tian, Zengshan and Jiang, Qing and Xu, Junxing},
+        booktitle={2020 IEEE 2nd International Conference on Civil Aviation Safety and Information Technology (ICCASIT}, 
+        title={Path Tracking Based on Improved Pure Pursuit Model and PID}, 
+        year={2020},
+        volume={},
+        number={},
+        pages={359-364},
+        doi={10.1109/ICCASIT50869.2020.9368694}
+    }
+    %ros
+    @inproceedings{quigley2009ros,
+        title={ROS: an open-source Robot Operating System},
+        author={Quigley, Morgan and Conley, Ken and Gerkey, Brian and Faust, Josh and Foote, Tully and Leibs, Jeremy and Wheeler, Rob and Ng, Andrew Y and others},
+        booktitle={ICRA workshop on open source software},
+        volume={3},
+        number={3.2},
+        pages={5},
+        year={2009},
+        organization={Kobe, Japan}
+    }
+    %gazebo simulator
+    @INPROCEEDINGS{1389727,
+        author={Koenig, N. and Howard, A.},
+        booktitle={2004 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) (IEEE Cat. No.04CH37566)}, 
+        title={Design and use paradigms for Gazebo, an open-source multi-robot simulator}, 
+        year={2004},
+        volume={3},
+        number={},
+        pages={2149-2154 vol.3},
+        doi={10.1109/IROS.2004.1389727}
+    }
+    %carla sim
+    @inproceedings{dosovitskiy2017carla,
+        title={CARLA: An open urban driving simulator},
+        author={Dosovitskiy, Alexey and Ros, German and Codevilla, Felipe and Lopez, Antonio and Koltun, Vladlen},
+        booktitle={Conference on robot learning},
+        pages={1--16},
+        year={2017},
+        organization={PMLR}
+    }
+    %pure pursuit
+    @techreport{coulter1992implementation,
+        title={Implementation of the pure pursuit path tracking algorithm},
+        author={Coulter, R Craig},
+        year={1992},
+        institution={Carnegie-Mellon UNIV Pittsburgh PA Robotics INST}
+    }
+    @INPROCEEDINGS{7796574,
+        author={Ohta, Hiroki and Akai, Naoki and Takeuchi, Eijiro and Kato, Shinpei and Edahiro, Masato},
+        booktitle={2016 IEEE 4th International Conference on Cyber-Physical Systems, Networks, and Applications (CPSNA)}, 
+        title={Pure Pursuit Revisited: Field Testing of Autonomous Vehicles in Urban Areas}, 
+        year={2016},
+        volume={},
+        number={},
+        pages={7-12},
+        doi={10.1109/CPSNA.2016.10}
+    }
+    %clothoid 1
+    @ARTICLE{6646277,
+        author={Brezak, Mišel and Petrović, Ivan},
+        journal={IEEE Transactions on Robotics}, 
+        title={Real-time Approximation of Clothoids With Bounded Error for Path Planning Applications}, 
+        year={2014},
+        volume={30},
+        number={2},
+        pages={507-515},
+        doi={10.1109/TRO.2013.2283928}
+    }
+    %ref in clothoid 1
+    @inproceedings{kanayama1988smooth,
+        title={Smooth Local Path Planning for Autonomous Vehicles (Part II. Cubic Spirals)},
+        author={Kanayama, Y and Hartman, B},
+        booktitle={Proc. Annual Conference of Robotics Society of Japan},
+        pages={93--96},
+        year={1988}
+        }
+        @article{delingette1991trajectory, 
+        title={Trajectory generation with curvature constraint based on energy minimization},
+        author={Delingette, Herv{\'e} and Hebert, Martial and Ikeuchi, Katsushi},
+        year={1991},
+        publisher={Carnegie Mellon University}
+    }
+    @inproceedings{segovia1991comparative,
+        title={Comparative study of the different methods of path generation for a mobile robot in a free environment},
+        author={Segovia, A and Rombaut, M and Preciado, A and Meizel, D},
+        booktitle={Fifth International Conference on Advanced Robotics' Robots in Unstructured Environments},
+        pages={1667--1670},
+        year={1991},
+        organization={IEEE}
+    }
+    @inproceedings{lau2009kinodynamic,
+        title={Kinodynamic motion planning for mobile robots using splines},
+        author={Lau, Boris and Sprunk, Christoph and Burgard, Wolfram},
+        booktitle={2009 IEEE/RSJ International Conference on Intelligent Robots and Systems},
+        pages={2427--2433},
+        year={2009},
+        organization={IEEE}
+    }
+    @article{shanmugavel2010co,
+        title={Co-operative path planning of multiple UAVs using Dubins paths with clothoid arcs},
+        author={Shanmugavel, Madhavan and Tsourdos, Antonios and White, Brian and {\.Z}bikowski, Rafa{\l}},
+        journal={Control engineering practice},
+        volume={18},
+        number={9},
+        pages={1084--1092},
+        year={2010},
+        publisher={Elsevier}
+    }
+    @ARTICLE{388788,
+        author={Fleury, S. and Soueres, P. and Laumond, J.-P. and Chatila, R.},
+        journal={IEEE Transactions on Robotics and Automation}, 
+        title={Primitives for smoothing mobile robot trajectories}, 
+        year={1995},
+        volume={11},
+        number={3},
+        pages={441-448},
+        doi={10.1109/70.388788}
+    }
+    @article{BOISSONNAT1999613,
+        title = {Shortest plane paths with bounded derivative of the curvature},
+        journal = {Comptes Rendus de l'Académie des Sciences - Series I - Mathematics},
+        volume = {329},
+        number = {7},
+        pages = {613-618},
+        year = {1999},
+        issn = {0764-4442},
+        doi = {https://doi.org/10.1016/S0764-4442(00)80011-7},
+        url = {https://www.sciencedirect.com/science/article/pii/S0764444200800117},
+        author = {Jean-Daniel Boissonnat and André Cérézo and Elena V. Degtiariova-Kostova and Vladimir P. Kostov and Juliette Leblond},
+    }
+    @ARTICLE{1362698,
+        author={Fraichard, T. and Scheuer, A.},
+        journal={IEEE Transactions on Robotics}, 
+        title={From Reeds and Shepp's to continuous-curvature paths}, 
+        year={2004},
+        volume={20},
+        number={6},
+        pages={1025-1035},
+        doi={10.1109/TRO.2004.833789}
+    }
+    @phdthesis{meidenbauer2007investigation,
+        title={An investigation of the clothoid steering model for autonomous vehicles},
+        author={Meidenbauer, Kennneth Richard},
+        year={2007},
+        school={Virginia Tech}
+    }
+    @article{urmson2008autonomous,
+        title={Autonomous driving in urban environments: Boss and the urban challenge},
+        author={Urmson, Chris and Anhalt, Joshua and Bagnell, Drew and Baker, Christopher and Bittner, Robert and Clark, MN and Dolan, John and Duggins, Dave and Galatali, Tugrul and Geyer, Chris and others},
+        journal={Journal of field Robotics},
+        volume={25},
+        number={8},
+        pages={425--466},
+        year={2008},
+        publisher={Wiley Online Library}
+    }
+    % clothoid 2
+    @INPROCEEDINGS{7942658,
+        author={Atmosudiro, Agus and Verl, Alexander and Lechler, Armin and Schwarz, Gerwin},
+        booktitle={2017 3rd International Conference on Control, Automation and Robotics (ICCAR)}, 
+        title={A Clothoid based real-time interpolation concept for path smoothing}, 
+        year={2017},
+        volume={},
+        number={},
+        pages={41-46},
+        doi={10.1109/ICCAR.2017.7942658}
+    }
+    @ARTICLE{7962257,
+        author={Chen, Yong and Cai, Yiyu and Zheng, Jianmin and Thalmann, Daniel},
+        journal={IEEE Transactions on Robotics}, 
+        title={Accurate and Efficient Approximation of Clothoids Using Bézier Curves for Path Planning}, 
+        year={2017},
+        volume={33},
+        number={5},
+        pages={1242-1247},
+        doi={10.1109/TRO.2017.2699670}
+    }
+    @article{nutbourne1972curvature,
+        title={Curvature profiles for plane curves},
+        author={Nutbourne, AW and McLellan, PM and Kensit, RML},
+        journal={Computer-aided design},
+        volume={4},
+        number={4},
+        pages={176--184},
+        year={1972},
+        publisher={Elsevier}
+    }
+    % frenel integrals
+    @ARTICLE{41470,
+        author={Barsky, B.A. and DeRose, T.D.},
+        journal={IEEE Computer Graphics and Applications}, 
+        title={Geometric continuity of parametric curves: three equivalent characterizations}, 
+        year={1989},
+        volume={9},
+        number={6},
+        pages={60-69},
+        doi={10.1109/38.41470}
+    }
+    %clothoid approximation 6646277,7962257,4543548
+    @INPROCEEDINGS{4543548,
+        author={Montes, Nicolas and Herraez, Alvaro and Armesto, Leopoldo and Tornero, Josep},
+        booktitle={2008 IEEE International Conference on Robotics and Automation}, 
+        title={Real-time clothoid approximation by Rational Bezier curves}, 
+        year={2008},
+        volume={},
+        number={},
+        pages={2246-2251},
+        doi={10.1109/ROBOT.2008.4543548}
+    }
+    %pyclothoids library and Bertolazzi papers: https://doi.org/10.1002/mma.3114, BERTOLAZZI201899,
+    %https://doi.org/10.1002/mma.4700, doi:10.1137/18M1200439
+    @misc{pyclothoids,
+        author = {Schmitz, Johannes and phillipd94},
+        title = {{pyclothoids}},
+        howpublished = "\url{https://github.com/phillipd94/pyclothoids}",
+        year = {2020}, 
+        note = "[Online; accessed 2022]"
+    }
+    @article{https://doi.org/10.1002/mma.3114,
+        author = {Bertolazzi, Enrico and Frego, Marco},
+        title = {G1 fitting with clothoids},
+        journal = {Mathematical Methods in the Applied Sciences},
+        volume = {38},
+        number = {5},
+        pages = {881-897},
+        keywords = {clothoid, Fresnel integrals, Hermite G1 interpolation},
+        doi = {https://doi.org/10.1002/mma.3114},
+        url = {https://onlinelibrary.wiley.com/doi/abs/10.1002/mma.3114},
+        eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1002/mma.3114},
+        year = {2015}
+    }
+    @article{BERTOLAZZI201899,
+        title = {On the G2 Hermite Interpolation Problem with clothoids},
+        journal = {Journal of Computational and Applied Mathematics},
+        volume = {341},
+        pages = {99-116},
+        year = {2018},
+        issn = {0377-0427},
+        doi = {https://doi.org/10.1016/j.cam.2018.03.029},
+        url = {https://www.sciencedirect.com/science/article/pii/S0377042718301924},
+        author = {Enrico Bertolazzi and Marco Frego},
+        keywords = {Clothoid, Euler spiral, Cornu spiral, 
+                        interpolation, Fitting},
+    }
+    @article{https://doi.org/10.1002/mma.4700,
+        author = {Bertolazzi, Enrico and Frego, Marco},
+        title = {Interpolating clothoid splines with curvature continuity},
+        journal = {Mathematical Methods in the Applied Sciences},
+        volume = {41},
+        number = {4},
+        pages = {1723-1737},
+        keywords = {clothoid, fresnel integrals, splines},
+        doi = {https://doi.org/10.1002/mma.4700},
+        url = {https://onlinelibrary.wiley.com/doi/abs/10.1002/mma.4700},
+        eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1002/mma.4700},
+        year = {2018}
+    }
+    @article{doi:10.1137/18M1200439,
+        author = {Frego, Marco and Bertolazzi, Enrico},
+        title = {Point-Clothoid Distance and Projection Computation},
+        journal = {SIAM Journal on Scientific Computing},
+        volume = {41},
+        number = {5},
+        pages = {A3326-A3353},
+        year = {2019},
+        doi = {10.1137/18M1200439},
+        URL = {https://doi.org/10.1137/18M1200439},
+        eprint = {https://doi.org/10.1137/18M1200439}
+    }
+    %Dijkstra algoritmm
+    @article{dijkstra1959note,
+        title={A note on two problems in connexion with graphs},
+        author={Dijkstra, Edsger W},
+        journal={Numerische mathematik},
+        volume={1},
+        number={1},
+        pages={269--271},
+        year={1959},
+        publisher={Springer}
+    }
+
+
+\end{filecontents}
+
+\bibliographystyle{unsrt}
+\bibliography{References}
+
+
+
+\newpage
+
+
+
+
+
+
+
+
+
+\end{document}

@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2019/Debian)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: unsrt.bst
+Database file #1: References.bib
+Warning--empty journal in delingette1991trajectory
+You've used 25 entries,
+            1791 wiz_defined-function locations,
+            605 strings with 8304 characters,
+and the built_in function-call counts, 7006 in all, are:
+= -- 644
+> -- 261
+< -- 9
++ -- 96
+- -- 71
+* -- 474
+:= -- 1025
+add.period$ -- 78
+call.type$ -- 25
+change.case$ -- 26
+chr.to.int$ -- 0
+cite$ -- 26
+duplicate$ -- 315
+empty$ -- 703
+format.name$ -- 71
+if$ -- 1638
+int.to.chr$ -- 0
+int.to.str$ -- 25
+missing$ -- 23
+newline$ -- 129
+num.names$ -- 25
+pop$ -- 74
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 186
+stack$ -- 0
+substring$ -- 598
+swap$ -- 106
+text.length$ -- 9
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 1
+while$ -- 61
+width$ -- 27
+write$ -- 279
+(There was 1 warning)
