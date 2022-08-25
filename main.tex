@@ -470,19 +470,18 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
 
 \newpage
 
-\section{Neural Network Estimation}
 
+\section{Data collection}
 Read code not pdf here.....
 
-SECTIONS:
 -Data collection
-    -explaining data collection in simulator
-        -how all the pieces come together
-        -reasons behind the choices
-    -(explaining data collection in real world, better explained in results sections)
+-explaining data collection in simulator
+-how all the pieces come together
+-reasons behind the choices
+-(explaining data collection in real world, better explained in results sections)
     -dependency on possible parameters:
-        -noise level in steering, can be evaluated both a priori(type of noise injection) and a
-        posteriori(variance between optimal path and training path), 
+    -noise level in steering, can be evaluated both a priori(type of noise injection) and a
+    posteriori(variance between optimal path and training path), 
         -noise level in speed
         -number of frames
         -fps of the Video
@@ -491,7 +490,8 @@ SECTIONS:
         -(variability of the path, choosing a very repetitive path or a variable one)
         -(camera orientation, requires redoing all videos)
         -(camera position, requires redoing all videos)
-
+        
+\section{Neural Network Estimation}
 -Neural Network Estimation
     -objectives of the network
         -estimating heading error
@@ -505,11 +505,12 @@ SECTIONS:
             -layers, activations, weights initialization, biases initialization, and reasons for everything
     -pytorch implementation
     -Data flow
-        -io of the network
+        -i/o of the network
             -image dimension
+        -data preprocessing
         -data augmentation
             -explain how it works, reasons for doing it, and why it is necessary 
-
+            -details of the augmentation, and possible variations
         -data normalization
         -data splitting
         -data loading
@@ -525,6 +526,7 @@ SECTIONS:
         -epochs
         -losses, and loss plots
     -Network analysis
+        -explanation of standard network analysis methods
         -visualizations of conv filters
         -visualizations of fully connected layers
         -layer activations
@@ -539,22 +541,35 @@ SECTIONS:
         -state estimation
         -reducing dataset size
 
-Poi discussione sulle estensioni:
-\begin{itemize}
-    \item multiple frames
-    \item time coherence
-    \item continuity
-    \item multiple points estimation, path ahead
-    \item variable speed
-    \item state estimation
-    \item reducing dataset size
-\end{itemize}
-
 \section{Results}
-Analisi dei risultati in relazione a hyperparamters, optimal path, quantita' di
-dati, randomicita', metriche di prestazione differenti, facilita' di
-implementazione e di distribuzione, etc...
-
+-Experimental setup
+    -explanation of the experimental setup in the sparcs lab, Vicon system etc..
+    -explanation of data collection methodologies
+    -analysis of performance wrt different parameters combinations and values, graphs tables etc..
+        Parameters:
+        -noise levels in training path
+            -steering noise, quantified by variance of distance car-path; diff yaw car-yaw path
+            -speed noise, quantified by variance of speed value from the desired mean speed
+        -image dimension, images are downsized to achieve faster computation, evaluate the impact
+        -network architecture variations:
+            -num conv layers
+            -num fully connected layers
+            -num hidden units in each layer
+            -complexity metric of network (?search papers)
+        -fps of the video
+        -length of the training dataset
+            -length of the video
+            -car speed
+            -length of the simulation path
+            -simulation time 
+        -training Parameters    
+            -learning rate
+            -batch size
+            -optimizer
+            -epochs
+        -image augmentation
+            -noise level
+            -
 
 \newpage
 \section{Conclusion and Future Work}
