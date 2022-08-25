@@ -461,6 +461,8 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
     -check papers: \url{https://ieeexplore.ieee.org/document/6728473},
     \url{https://ieeexplore.ieee.org/document/9398517}, which are more about the deep learning
     aspect
+    -computational efficiency
+    -different performance metrics for different sections (curves, straight lines)
     
     useful papers:
     \url{https://ieeexplore.ieee.org/abstract/document/6977166, https://link.springer.com/article/10.1007/s00138-011-0404-2, https://ieeexplore.ieee.org/document/1603550, https://ieeexplore.ieee.org/document/6728473,  https://ieeexplore.ieee.org/document/9398517} 
@@ -470,17 +472,72 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
 
 \section{Neural Network Estimation}
 
-\subsection{Data Collecting}
-    Discussione su tecniche e metodi di raccolta dei dati per il training nel
-    simulatore, possibili varianti, tipi di hyperparamters...
-    
+read code not pdf here...
 
+SECTIONS:
+-Data collection
+    -explaining data collection in simulator
+        -how all the pieces come together
+        -reasons behind the choices
+    -(explaining data collection in real world, better explained in results sections)
+    -dependency on possible parameters:
+        -noise level in steering, can be evaluated both a priori(type of noise injection) and a
+        posteriori(variance between optimal path and training path), 
+        -noise level in speed
+        -number of frames
+        -fps of the Video
+        -length of Video
+        -length of simulation path
+        -(variability of the path, choosing a very repetitive path or a variable one)
+        -(camera orientation, requires redoing all videos)
+        -(camera position, requires redoing all videos)
 
+-Neural Network Estimation
+    -objectives of the network
+        -estimating heading error
+        -fast estimation
+        -accuracy
+        -continuity
+        -(estimating the road)
+        -explainability
+    -architecture
+        -explain all the layers and what they do
+            -layers, activations, weights initialization, biases initialization, and reasons for everything
+    -pytorch implementation
+    -Data flow
+        -io of the network
+            -image dimension
+        -data augmentation
+            -explain how it works, reasons for doing it, and why it is necessary 
 
-
-\subsection{Training}
-Discussione sulla baseline usata nella BFMC, dettagli dell'architettura, dei
-vari processi, analisi degli hyperparamters
+        -data normalization
+        -data splitting
+        -data loading
+        -data batching
+        -data shuffling
+    -training
+        -optimizer
+        -loss function
+        -learning rate schedule
+        -early stopping
+        -validation
+        -training loop
+        -epochs
+        -losses, and loss plots
+    -Network analysis
+        -visualizations of conv filters
+        -visualizations of fully connected layers
+        -layer activations
+        -layer weights
+        -layer biases
+    -(Extensions)
+        -(multiple frames)
+        -(time coherence)
+        -(continuity)
+        -(multiple points estimation, path ahead)
+        -variable speed
+        -state estimation
+        -reducing dataset size
 
 Poi discussione sulle estensioni:
 \begin{itemize}
@@ -497,9 +554,6 @@ Poi discussione sulle estensioni:
 Analisi dei risultati in relazione a hyperparamters, optimal path, quantita' di
 dati, randomicita', metriche di prestazione differenti, facilita' di
 implementazione e di distribuzione, etc...
-
-\subsection{Network analysis}
-Analisi delle Networks
 
 
 \newpage
