@@ -31,7 +31,7 @@
        Department of Information Engineering\\
         Master Thesis in Control Systems Engineering\\
         \vskip2cm
-        TITOLO\\
+        Development of vision-based soft sensing techniques with training in virtual environment for autonomous vehicle control\\
         \vskip2cm
         \raggedright
         Supervisor:
@@ -444,12 +444,22 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
 
     Read code not pdf here...
     -L2 norm that we have both in simulation and hopefully in the real world thanks to a precise
-    localization system (MG idea)
+    localization system (my idea)
     -The ones explained in 'On Performance Evaluation Metrics for Lane Estimation'
-    -The ones explained in section 5 of 'Video-based lane estimation and tracking for driver assistance: survey, system, and evaluation'
+    \url{https://ieeexplore.ieee.org/abstract/document/6977166}
+        -there are several citated
+        -some are qualitative
+        -some evaluate the whole system estimation+Controller
+        -accuracy of lane markings wrt ground truth
+        -variance of polynomial coefficients that define lanes
+    -The ones explained in section 5 of 'Video-based lane estimation and tracking for driver
+    assistance: survey, system, and evaluation' \url{https://ieeexplore.ieee.org/document/1603550}
         -they used mean absolute error in position, standard deviation of error in position, standard
         deviation of error in rate of change of lateral position
             the idea of the rate of change is very interesting
+        -they also cite \url{https://ieeexplore.ieee.org/document/660563}, which are the
+        angular-deviation entropy and angular-deviation histogram fraction and their magnitude-weighted
+        counterparts. 
     -We should consider the 2 cases: the case of the heading error estimation and the case of the
     actual lane detection, there should be 2 different performance metrics for each one of them
     -We should consider the fact that we have the simulation environment and evaluate the performance
@@ -461,6 +471,10 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
     -check papers: \url{https://ieeexplore.ieee.org/document/6728473},
     \url{https://ieeexplore.ieee.org/document/9398517}, which are more about the deep learning
     aspect
+        -pixel level correctness (intersection over union) with evaluation on predef datasets
+        -boundary position and deviation
+        -corridor width
+
     -computational efficiency
     -different performance metrics for different sections (curves, straight lines)
     
