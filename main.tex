@@ -19,6 +19,7 @@
   mlshowsectionrules = true,
 }
 
+
 \interfootnotelinepenalty=10000
 
 \begin{document}
@@ -26,26 +27,30 @@
 \begin{titlepage}
     \centering
     \includegraphics[width=\linewidth]{loghi.png} % also works with logo.pdf
-    {\bfseries\Large
+    {\large
        Università degli Studi di Padova \\
        Department of Information Engineering\\
         Master Thesis in Control Systems Engineering\\
+    }
         \vskip2cm
+    {\bfseries\Large
         Development of vision-based soft sensing techniques with training in virtual environment for autonomous vehicle control\\
+    }    
         \vskip2cm
+    {\large
         \raggedright
-        Supervisor:
+        Supervisor: Mattia Bruschetta
         \vskip2cm
         \raggedleft
         Master Candidate: Matteo Grandin
-    }    
+    }
     \vfill
 
 \end{titlepage}
 
 
 \section{Abstract}
-    
+    The goal of this master thesis is to develop an original approach to lane estimation for scaled vehicles using a front-mounted camera and convolutional neural networks. The key components of this estimation process are the fact that all the training is performed in simulation using a noisy path; and the online inference is performed on low end hardware (raspberry pi 4) in an efficient and responsive way, while being very accurate. The heading error of the standard pure pursuit controller is chosen as estimation target. A clothoid based centerline has been chosen as training path for its several advantages in the analyzed scenario. Different performance metrics are evaluated and the standard mean squared error is found to be the more effective. An analysis on the hyperparameters (image dimension, lookahead distance, network complexity, training variability, and others) is performed in order to find the best combinations and evaluate the impact of each parameter. From the results in a real world scenario a very small network and image and a very high training variability resulted as the best overall combination, with the network complexity and training variability playing a major role in the accuracy of the system. The whole process is finally tested in a real life control loop achieving very good performance, allowing for precise lane tracking using delayless local estimation.
     \newpage
 
 % Table of Contents
@@ -478,6 +483,9 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
     -computational efficiency
     -different performance metrics for different sections (curves, straight lines)
     
+    -CONTINUITY
+    -RMS SU HE E DERIVATA
+
     useful papers:
     \url{https://ieeexplore.ieee.org/abstract/document/6977166, https://link.springer.com/article/10.1007/s00138-011-0404-2, https://ieeexplore.ieee.org/document/1603550, https://ieeexplore.ieee.org/document/6728473,  https://ieeexplore.ieee.org/document/9398517} 
 
@@ -584,6 +592,13 @@ Read code not pdf here.....
         -image augmentation
             -noise level
             -
+
+
+-aggiungere il control loop
+
+-ENFATIZZARE L'ASSENZA DI RITARDO NELLA NN
+
+
 
 \newpage
 \section{Conclusion and Future Work}
