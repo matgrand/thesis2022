@@ -445,49 +445,144 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
 
 \section{Performance metrics}
 
-    Definizione delle metriche di  performance
+    Since we are dealing with a complex estimation problem, it is very important to define a set of
+    appropriate performance metrics in order to reliably evaluate the quality of the estimation.
+    This is a difficult task since the problem of the estimate of the heading error with respect to
+    the center line is strictly related to the problem of the road estimation itself. 
 
-    Read code not pdf here...
-    -L2 norm that we have both in simulation and hopefully in the real world thanks to a precise
-    localization system (my idea)
-    -The ones explained in 'On Performance Evaluation Metrics for Lane Estimation'
-    \url{https://ieeexplore.ieee.org/abstract/document/6977166}
-        -there are several citated
-        -some are qualitative
-        -some evaluate the whole system estimation+Controller
-        -accuracy of lane markings wrt ground truth
-        -variance of polynomial coefficients that define lanes
-    -The ones explained in section 5 of 'Video-based lane estimation and tracking for driver
-    assistance: survey, system, and evaluation' \url{https://ieeexplore.ieee.org/document/1603550}
-        -they used mean absolute error in position, standard deviation of error in position, standard
-        deviation of error in rate of change of lateral position
-            the idea of the rate of change is very interesting
-        -they also cite \url{https://ieeexplore.ieee.org/document/660563}, which are the
-        angular-deviation entropy and angular-deviation histogram fraction and their magnitude-weighted
-        counterparts. 
-    -We should consider the 2 cases: the case of the heading error estimation and the case of the
-    actual lane detection, there should be 2 different performance metrics for each one of them
-    -We should consider the fact that we have the simulation environment and evaluate the performance
-    in easy conditions, namely when the tracking is near the center of the road, or when the car is
-    sliding left and right
-    -we should evaluate the continuity of the output as a performance measurement
-    -also we should distinguish the performance metric of the road estimation, from the whole
-    estimation+tracking performance, in this paper we are interested only in the first one. 
-    -check papers: \url{https://ieeexplore.ieee.org/document/6728473},
-    \url{https://ieeexplore.ieee.org/document/9398517}, which are more about the deep learning
-    aspect
-        -pixel level correctness (intersection over union) with evaluation on predef datasets
-        -boundary position and deviation
-        -corridor width
+    In this section we will analyze a set of metrics found in the literature, and we will propose a
+    different metric that we believe is more appropriate for our problem. 
 
-    -computational efficiency
-    -different performance metrics for different sections (curves, straight lines)
+    It is very important to make an initial distinction between two, very related but
+    different, approaches to the performance evaluation of lane detection and tracking systems: the
+    first one consists in comparing the estimation capabilities of the whole systems (estimation
+    \textit{and} control) by means of evaluating the tracking performance in a real or simulated
+    scenario. The second one consists in evaluating only the estimation performance on some kind of
+    ground truth data. The first approach is more realistic, but it has some big drawbacks: it is
+    very difficult to perform a fair comparison between different systems because it is hard to
+    replicate the same conditions in every test; moreover a systematic analysis of a big parameter
+    space with many possible variations is often infeasible within the testing time constraints.
+    Lastly, a very important issue is that testing tracking performance in a real scenario doesn't
+    give an accurate picture in terms of disturbances, or in other words, in situations where car is
+    relatively far from the center line, or in some very rare or extreme configurations, since a
+    good tracking systems is always close to tracking target in terms of both position and orientation. 
+    The second approach is more specific to the estimation problem, and therefore less applicable to
+    a wide range of systems. However, it has the advantage of being performed offline on prerecorded
+    videos, guaranteeing a fair comparison between variations, and it is also possible to perform
+    systematic sweeps over the parameters space in order to find the best configuration. In addition
+    to this it's possible to evaluate performance on edge cases in a fair and systematic way.  For these
+    reasons in this thesis we will focus on this second approach, analyzing the whole tracking
+    performance as a final step.
+
+    \subsection{Metrics from the literature}
+
+    In the paper \citep*{6977166} we can see that in the analyzed methods, to evaluate performance,
+    visual inspection of lane estimation is deployed in all studies. However, this is only a
+    qualitative metric. In order to quantify the performance of a lane estimation technique, one of
+    the most common metric is ego-vehicle position localization within the lane \citep*{1603550,cheng2007lane,6728507}.
+    Lower error in ego-vehicle localization is a result of more accurate lane detection process
+    itself. This is because ego-vehicle localization is computed using the estimated lane positions
+    in the proximity of the ego-vehicle. The method we propose will be strictly related to this
+    concept. Another key metric proposed in \citep*{6977166}, which is not very common in the
+    previous literature, but very important for the implementation side of the problem, is the
+    computational efficiency of the algorithm. Since we are dealing with a real-time problem, and
+    relatively low computational power, this metric is very important in our application.
+
+    Other, more quantitative, proposed metrics are the following:
+    \begin{itemize}
+        \item Lane markings related metrics: this set of metrics, despite being useful in some
+        applications, has been discarded since the estimation target doesn't directly depend on the
+        markings themselves, and could potentially be used in a scenario where there are no
+        markings at all, or very non-standard ones. In addition to this, one should consider the
+        additional complexity, and the appropriate way of generating the estimate of the lane
+        markings, which is not a trivial task and not the object of this thesis.
+        \item Pixel level accuracy: this metric is very widely applied in the context of vision
+        based estimation, it consists in classifying each pixel of the image as either part of the
+        lane or not. It is a very common in deep learning approaches \citep*{9398517}, firstly because it's very
+        straightforward to implement using convolutional filters and secondly because most of the
+        training and evaluation datasets are annotated pixel by pixel. This metric is usually
+        evaluated by means of a ratio between the number of correctly classified pixels and the
+        total number of pixels. This metric is not very useful in our case, since we are
+        interested in the heading error, however it is a very interesting possible extension of the
+        proposed method.
+    \end{itemize}
+    There are several other metrics in the literature that are of little interest in our particular
+    application. 
+
+    \subsection{Proposed metric}
+    Since in our particular application we are interested in the heading error, which is a scalar
+    quantity, a very natural choice for a performance metric is the mean squared error (MSE) with
+    respect to the ground truth. The main issue with this approach is how to retrieve the ground
+    truth. In the simulated environment it is very easy since we have access to the precise absolute position
+    and orientation of the car. In the real case it is more challenging, but with the experimental
+    setup we used, explained in section \ref*{sec:exp_setup} we were able to retrieve a precise
+    position and orientation, therefore we have an accurate ground truth that can be used to
+    evaluate the estimation performance and to compare different methods. In addition to the MSE,
+    the mean absolute error can also be considered with the same rationale, which is less dependent
+    on outliers. 
+
+    Another considered metric is the continuity and smoothness of the output sequence,
+    meaning that a sequence of consecutive frames should generate a continuous smooth output sequence
+    of heading errors, since we are not expecting any sudden changes in the road ahead or in the car
+    position. This metric becomes particularly important if we plan to use a control system on top
+    with some parameters that are dependent on the variation of the heading error, like, for
+    example, a PID controller with a derivative term. 
+
+    Lastly, we can also consider the computational efficiency of the algorithm and the
+    generalization capabilities of the system from the simulated environment to the real one, which
+    is a very important aspect of this estimation method.  
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=\linewidth]{figures/performance_metrics_example.eps}
+        \caption{Performance metrics example}
+        \label{fig:performance_metrics_example}
+    \end{figure}
+
+
+    % Definizione delle metriche di  performance s
+
+    % Read code not pdf here...
+    % -L2 norm that we have both in simulation and hopefully in the real world thanks to a precise
+    % localization system (my idea)
+    % -The ones explained in 'On Performance Evaluation Metrics for Lane Estimation'
+    % \url{https://ieeexplore.ieee.org/abstract/document/6977166}
+    %     -there are several citated
+    %     -some are qualitative
+    %     -some evaluate the whole system estimation+Controller
+    %     -accuracy of lane markings wrt ground truth
+    %     -variance of polynomial coefficients that define lanes
+    % -The ones explained in section 5 of 'Video-based lane estimation and tracking for driver
+    % assistance: survey, system, and evaluation' \url{https://ieeexplore.ieee.org/document/1603550}
+    %     -they used mean absolute error in position, standard deviation of error in position, standard
+    %     deviation of error in rate of change of lateral position
+    %         the idea of the rate of change is very interesting
+    %     -they also cite \url{https://ieeexplore.ieee.org/document/660563}, which are the
+    %     angular-deviation entropy and angular-deviation histogram fraction and their magnitude-weighted
+    %     counterparts. 
+    % -We should consider the 2 cases: the case of the heading error estimation and the case of the
+    % actual lane detection, there should be 2 different performance metrics for each one of them
+    % -We should consider the fact that we have the simulation environment and evaluate the performance
+    % in easy conditions, namely when the tracking is near the center of the road, or when the car is
+    % sliding left and right
+    % -we should evaluate the continuity of the output as a performance measurement
+    % -also we should distinguish the performance metric of the road estimation, from the whole
+    % estimation+tracking performance, in this paper we are interested only in the first one. 
+    % -check papers: \url{https://ieeexplore.ieee.org/document/6728473},
+    % \url{https://ieeexplore.ieee.org/document/9398517}, which are more about the deep learning
+    % aspect
+    %     -pixel level correctness (intersection over union) with evaluation on predef datasets
+    %     -boundary position and deviation
+    %     -corridor width
+
+    % -computational efficiency
+    % -different performance metrics for different sections (curves, straight lines)
     
-    -CONTINUITY
-    -RMS SU HE E DERIVATA
+    % -CONTINUITY
+    % -RMS SU HE E DERIVATA
 
-    useful papers:
-    \url{https://ieeexplore.ieee.org/abstract/document/6977166, https://link.springer.com/article/10.1007/s00138-011-0404-2, https://ieeexplore.ieee.org/document/1603550, https://ieeexplore.ieee.org/document/6728473,  https://ieeexplore.ieee.org/document/9398517} 
+    % useful papers:
+    % \url{https://ieeexplore.ieee.org/abstract/document/6977166, https://link.springer.com/article/10.1007/s00138-011-0404-2, https://ieeexplore.ieee.org/document/1603550, https://ieeexplore.ieee.org/document/6728473,  https://ieeexplore.ieee.org/document/9398517} 
 
 
 \newpage
@@ -564,6 +659,8 @@ Read code not pdf here.....
         -reducing dataset size
 
 \section{Results}
+
+\subsection{Experimental setup} \label{sec:exp_setup}
 -Experimental setup
     -explanation of the experimental setup in the sparcs lab, Vicon system etc..
     -explanation of data collection methodologies
@@ -927,6 +1024,55 @@ consider adding derivation of the pure pursuit
         year={1959},
         publisher={Springer}
     }
+
+    %performance metrics
+    @INPROCEEDINGS{6977166,
+        author={Satzoda, Ravi Kumar and Trivedi, Mohan M.},
+        booktitle={2014 22nd International Conference on Pattern Recognition}, 
+        title={On Performance Evaluation Metrics for Lane Estimation}, 
+        year={2014},
+        volume={},
+        number={},
+        pages={2625-2630},
+        doi={10.1109/ICPR.2014.453}
+    }
+    @ARTICLE{1603550,
+        author={McCall, J.C. and Trivedi, M.M.},
+        journal={IEEE Transactions on Intelligent Transportation Systems}, 
+        title={Video-based lane estimation and tracking for driver assistance: survey, system, and evaluation}, 
+        year={2006},
+        volume={7},
+        number={1},
+        pages={20-37},
+        doi={10.1109/TITS.2006.869595}
+    }
+    @article{cheng2007lane,
+        title={Lane tracking with omnidirectional cameras: Algorithms and evaluation},
+        author={Cheng, Shinko Yuanhsien and Trivedi, Mohan Manubhai},
+        journal={EURASIP Journal on Embedded Systems},
+        volume={2007},
+        pages={1--8},
+        year={2007},
+        publisher={Springer}
+    }
+    @INPROCEEDINGS{6728507,
+        author={Satzoda, R. K. and Trivedi, Mohan M.},
+        booktitle={16th International IEEE Conference on Intelligent Transportation Systems (ITSC 2013)}, 
+        title={Selective salient feature based lane analysis}, 
+        year={2013},
+        volume={},
+        number={},
+        pages={1906-1911},
+        doi={10.1109/ITSC.2013.6728507}}
+    @ARTICLE{9398517,
+        author={Zhang, Youcheng and Lu, Zongqing and Zhang, Xuechen and Xue, Jing-Hao and Liao, Qingmin},
+        journal={IEEE Transactions on Intelligent Transportation Systems}, 
+        title={Deep Learning in Lane Marking Detection: A Survey}, 
+        year={2022},
+        volume={23},
+        number={7},
+        pages={5976-5992},
+        doi={10.1109/TITS.2021.3070111}}
 
 
 \end{filecontents}
