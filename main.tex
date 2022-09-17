@@ -590,23 +590,41 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
 
 \section{Data collection}
 Read code not pdf here.....
+%explain the main steps of the pipeline
+% -Data collection
+% -explaining data collection in simulator
+% -how all the pieces come together
+% -reasons behind the choices
+% -(explaining data collection in real world, better explained in results sections)
+%     -dependency on possible parameters:
+%     -noise level in steering, can be evaluated both a priori(type of noise injection) and a
+%     posteriori(variance between optimal path and training path), 
+%         -noise level in speed
+%         -number of frames
+%         -fps of the Video
+%         -length of Video
+%         -length of simulation path
+%         -(variability of the path, choosing a very repetitive path or a variable one)
+%         -(camera orientation, requires redoing all videos)
+%         -(camera position, requires redoing all videos)
 
--Data collection
--explaining data collection in simulator
--how all the pieces come together
--reasons behind the choices
--(explaining data collection in real world, better explained in results sections)
-    -dependency on possible parameters:
-    -noise level in steering, can be evaluated both a priori(type of noise injection) and a
-    posteriori(variance between optimal path and training path), 
-        -noise level in speed
-        -number of frames
-        -fps of the Video
-        -length of Video
-        -length of simulation path
-        -(variability of the path, choosing a very repetitive path or a variable one)
-        -(camera orientation, requires redoing all videos)
-        -(camera position, requires redoing all videos)
+    Talk about Gazebo and ros
+    % talk about gazeebo, ros, the initial setup with automobile_data, then talk about the new setup,
+    % that uses services to directly cotntrol the car and why it is more useful, than talk about the
+    % path semplification, to eprove points not to be accurate
+
+\section{Heading error calculation}
+    Calculation of the heading error
+
+%talk about the initial method that was fixed wrt the dataset, and then the new setup that allows
+%for more flxibility, then talk about the algorithm, add image to explain algorithm
+
+\section{Dataset}
+    Dataset generation
+
+%talk about the dataset generation pipeline, from the raw images to the preprocessing to the data augmentation
+
+
         
 \section{Neural Network Estimation}
 -Neural Network Estimation
@@ -662,38 +680,49 @@ Read code not pdf here.....
 
 \subsection{Experimental setup} \label{sec:exp_setup}
 -Experimental setup
-    -explanation of the experimental setup in the sparcs lab, Vicon system etc..
-    -explanation of data collection methodologies
-    -analysis of performance wrt different parameters combinations and values, graphs tables etc..
-        Parameters:
-        -noise levels in training path
-            -steering noise, quantified by variance of distance car-path; diff yaw car-yaw path
-            -speed noise, quantified by variance of speed value from the desired mean speed
-        -image dimension, images are downsized to achieve faster computation, evaluate the impact
-        -network architecture variations:
-            -num conv layers
-            -num fully connected layers
-            -num hidden units in each layer
-            -complexity metric of network (?search papers)
-        -fps of the video
-        -length of the training dataset
-            -length of the video
-            -car speed
-            -length of the simulation path
-            -simulation time 
-        -training Parameters    
-            -learning rate
-            -batch size
-            -optimizer
-            -epochs
-        -image augmentation
-            -noise level
-            -
+    % -explanation of the experimental setup in the sparcs lab, Vicon system etc..
+    % -explanation of data collection methodologies
+    % -analysis of performance wrt different parameters combinations and values, graphs tables etc..
+    %     Parameters:
+    %     -noise levels in training path
+    %         -steering noise, quantified by variance of distance car-path; diff yaw car-yaw path
+    %         -speed noise, quantified by variance of speed value from the desired mean speed
+    %     -image dimension, images are downsized to achieve faster computation, evaluate the impact
+    %     -network architecture variations:
+    %         -num conv layers
+    %         -num fully connected layers
+    %         -num hidden units in each layer
+    %         -complexity metric of network (?search papers)
+    %     -fps of the video
+    %     -length of the training dataset
+    %         -length of the video
+    %         -car speed
+    %         -length of the simulation path
+    %         -simulation time 
+    %     -training Parameters    
+    %         -learning rate
+    %         -batch size
+    %         -optimizer
+    %         -epochs
+    %     -image augmentation
+    %         -noise level
+    %         -
 
+\subsection{Datasets analysis}
+Talk about the datasets, the possible variations, lots of images
 
--aggiungere il control loop
+\subsection{Analysis of hyperparameters}
+    Talk about the big hyperparameters study and how it has been implemented
 
--ENFATIZZARE L'ASSENZA DI RITARDO NELLA NN
+\subsection{Numerical results}
+    Talk about the results, the graphs, the tables, the numbers, the analysis
+
+\section{Control loop application}
+    Talk about the control loop, the implementation, the results, the analysis
+
+% -aggiungere il control loop
+
+% -ENFATIZZARE L'ASSENZA DI RITARDO NELLA NN
 
 
 
