@@ -587,8 +587,27 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
 
 \newpage
 
-
-\section{Data collection}
+\section{Proposed estimation method}
+In this section we will present the proposed method for the estimation of the heading error. From a
+general point of view the process can be subdivided in 5 main steps that will be described in detail
+in the following subsections:
+\begin{enumerate}
+    \item \textbf{Data collection}: this step consists in collecting, in the simulated environment, the raw data that will be used to
+    generate the datasets.
+    \item \textbf{Heading error} calculation: the second step is to generate the ground truth for the
+    previously generated datasets. It's important to separate this step from the previous one, in
+    order to allow a more general approach to the problem.
+    \item \textbf{Dataset generation}: this step consists in generating the datasets that will be used to
+    train the network, it is when data preprocessing and augmentation are applied, 2 key components
+    of the proposed method.
+    \item \textbf{Network training}: this step consists in training the network using the previously
+    generated dataset. The network architecture will be discussed, together with the training
+    process itself and the hyperparameters used. 
+    \item \textbf{Online estimation}: this is the final step, where all the previous steps are combined in
+    order to accurately estimate the heading error in real time, on the real vehicle, from the
+    camera frames.
+\end{enumerate}
+\subsection{Data collection}
 Read code not pdf here.....
 %explain the main steps of the pipeline
 % -Data collection
@@ -613,68 +632,72 @@ Read code not pdf here.....
     % that uses services to directly cotntrol the car and why it is more useful, than talk about the
     % path semplification, to eprove points not to be accurate
 
-\section{Heading error calculation}
+\subsection{Heading error calculation}
     Calculation of the heading error
 
 %talk about the initial method that was fixed wrt the dataset, and then the new setup that allows
 %for more flxibility, then talk about the algorithm, add image to explain algorithm
 
-\section{Dataset}
+\subsection{Dataset}
     Dataset generation
 
 %talk about the dataset generation pipeline, from the raw images to the preprocessing to the data augmentation
 
 
         
-\section{Neural Network Estimation}
--Neural Network Estimation
-    -objectives of the network
-        -estimating heading error
-        -fast estimation
-        -accuracy
-        -continuity
-        -(estimating the road)
-        -explainability
-    -architecture
-        -explain all the layers and what they do
-            -layers, activations, weights initialization, biases initialization, and reasons for everything
-    -pytorch implementation
-    -Data flow
-        -i/o of the network
-            -image dimension
-        -data preprocessing
-        -data augmentation
-            -explain how it works, reasons for doing it, and why it is necessary 
-            -details of the augmentation, and possible variations
-        -data normalization
-        -data splitting
-        -data loading
-        -data batching
-        -data shuffling
-    -training
-        -optimizer
-        -loss function
-        -learning rate schedule
-        -early stopping
-        -validation
-        -training loop
-        -epochs
-        -losses, and loss plots
-    -Network analysis
-        -explanation of standard network analysis methods
-        -visualizations of conv filters
-        -visualizations of fully connected layers
-        -layer activations
-        -layer weights
-        -layer biases
-    -(Extensions)
-        -(multiple frames)
-        -(time coherence)
-        -(continuity)
-        -(multiple points estimation, path ahead)
-        -variable speed
-        -state estimation
-        -reducing dataset size
+\subsection{Neural network training}
+    Talk aboout the training
+% -Neural Network Estimation
+    % -objectives of the network
+    %     -estimating heading error
+    %     -fast estimation
+    %     -accuracy
+    %     -continuity
+    %     -(estimating the road)
+    %     -explainability
+    % -architecture
+    %     -explain all the layers and what they do
+    %         -layers, activations, weights initialization, biases initialization, and reasons for everything
+    % -pytorch implementation
+    % -Data flow
+    %     -i/o of the network
+    %         -image dimension
+    %     -data preprocessing
+    %     -data augmentation
+    %         -explain how it works, reasons for doing it, and why it is necessary 
+    %         -details of the augmentation, and possible variations
+    %     -data normalization
+    %     -data splitting
+    %     -data loading
+    %     -data batching
+    %     -data shuffling
+    % -training
+    %     -optimizer
+    %     -loss function
+    %     -learning rate schedule
+    %     -early stopping
+    %     -validation
+    %     -training loop
+    %     -epochs
+    %     -losses, and loss plots
+    % -Network analysis
+    %     -explanation of standard network analysis methods
+    %     -visualizations of conv filters
+    %     -visualizations of fully connected layers
+    %     -layer activations
+    %     -layer weights
+    %     -layer biases
+    % -(Extensions)
+    %     -(multiple frames)
+    %     -(time coherence)
+    %     -(continuity)
+    %     -(multiple points estimation, path ahead)
+    %     -variable speed
+    %     -state estimation
+        % -reducing dataset size
+
+\subsection{Online estimation}
+    Talk about the online estimationq
 
 \section{Results}
 
