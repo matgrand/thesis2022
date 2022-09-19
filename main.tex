@@ -723,10 +723,17 @@ the images. To achieve this, we apported a series of modifications:
 \subsection{Heading error calculation}
     In order to precisely calculate the heading error an algorithm has been developed that is a
     direct implementation of the common heading error definition in the PP controller
-    \citep*{9368694}. 
+    \citep*{9368694}. The algorithm works by first finding the (normally 2) points at the distance
+    $d_ahead$ required, and then selecting the one that is coherent with the car orientation. The
+    algorithm is robust with respect to the 2 possible edge cases of finding a single point or no
+    point at all, which means the vehicle is too far from the path and the algorithm returns the
+    closest point; or the one where there are $\geq 2$ points at the same distance, in this case the
+    algorithm returns the further in the path. The algorithm is implemented in python and a
+    pseudocode for it can be seen in algorithm \ref*{alg:heading_error_calculation}. A graphical
+    intuition of the algorithm can be seen in figure \ref*{fig:heading_error_calculation}. 
     
-    \begin{algorithm}[h!]
-        \caption{Calculate Heading Error}\label{euclid}
+    \begin{algorithm}
+        \caption{Calculate Heading Error}\label{alg:heading_error_calculation}
         \begin{algorithmic}[1]
         \Procedure{$\text{calcHE}, \text{inputs}: x,y,\phi, path,d_{ahead}$}{}
         \State $thrsh \gets \text{ distance between points in } path$
@@ -751,12 +758,16 @@ the images. To achieve this, we apported a series of modifications:
         \EndIf
         \State $\phi_{ref} \gets \text{atan2}(p_{HE}[y] - p_{car}[y], p_{HE}[x] - p_{car}[x])$
         \State \Return $\phi_{ref} - \phi$
-
-
-
         \EndProcedure
         \end{algorithmic}
     \end{algorithm}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \caption{Heading error calculation}
+        \label{fig:heading_error_calculation}
+    \end{figure}
 %talk about the initial method that was fixed wrt the dataset, and then the new setup that allows
 %for more flxibility, then talk about the algorithm, add image to explain algorithm
 
