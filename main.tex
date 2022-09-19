@@ -594,7 +594,7 @@ in the following subsections:
 \begin{enumerate}
     \item \textbf{Data collection}: this step consists in collecting, in the simulated environment, the raw data that will be used to
     generate the datasets.
-    \item \textbf{Heading error} calculation: the second step is to generate the ground truth for the
+    \item \textbf{Heading error calculation}: the second step is to generate the ground truth for the
     previously generated datasets. It's important to separate this step from the previous one, in
     order to allow a more general approach to the problem.
     \item \textbf{Dataset generation}: this step consists in generating the datasets that will be used to
@@ -607,8 +607,61 @@ in the following subsections:
     order to accurately estimate the heading error in real time, on the real vehicle, from the
     camera frames.
 \end{enumerate}
+
 \subsection{Data collection}
-Read code not pdf here.....
+
+The main idea of data collection is to use the \textit{Gazebo} simulator to generate an arbitrarily
+large set of images and the corresponding ground truth labels. During the developing process 2 main
+methods were designed in order to solve the task. The original method was tailored to the specific
+aspects of the challenge, and was therefore designed to solve not only the data collection problem
+but also any other aspect of the challenge that could be tested in a simulated environment, such as
+the high level logic, the control system, the interface with the additional simulated sensors, etc.
+The second method was designed after the challenge to be specific with respect to the data
+collection problem. The second method heavily simplifies the interface and the complexity required
+to control the car in the simulator, and allows to generate the dataset with a much finer level of
+control. In order to study the influence of the dataset collection parameters on the final
+performance, in this thesis we will use and focus mostly on the second method, however the original
+method will also be described since it shares most of the ideas.
+
+\subsubsection{Original method}
+The Gazebo simulator is very convenient for developing since every simulated model and sensor
+information is published on a \textit{ROS} topic, and the car can also be controlled by publishing
+steering and throttle commands on their respective topics. This is very useful since it allows to
+use the same code for both the simulation and the real vehicle, where we also implemented a
+\textit{ROS} network. 
+
+The main steps of the original method are the following:
+\begin{itemize}
+    \item A training path is generated for the car to follow, this path is based on the
+    aforementioned Clothoid interpolation and slides across all the different sections of the map in
+    order to allow the car to encounter a good variety of situations.
+    \item The car is controlled with a PP controller at a fixed speed. 
+    \item The point ahead for the controller is selected by finding the closest point of the vehicle
+    on the path and then choosing the point on the path at a fixed distance ahead of it. This way of selecting
+    the point ahead is very convenient and easy to implement and has the advantage of always finding
+    a unique point, but is not conformed to the common definition of point ahead for the PP
+    controller. 
+    \item While the vehicle is travelling along the path, Gaussian noise is injected into the
+    steering in order for the car to slide left and right. This is done in order to generate more
+    variety in the training dataset. The noise injection is a key aspect of the estimation method
+    and has a big impact on the final performance, as it will be discussed in section
+    \ref*{sec:results}. The idea is that if the camera only sees the road ahead always perfectly
+    centered, later, after the training, when facing the road at a different position and
+    orientation, slightly off center, the network will not be able to estimate the heading error for
+    lack of examples in the training dataset. The amount and characterization of the noise injected
+    will be subject of a parametric analysis.
+    \item While the car is travelling, the camera is recording images at a fixed rate of 30 fps and
+    saving them alongside their corresponding ground truth heading error in a compressed file for
+    later use. 
+\end{itemize}
+The 2 main advantages of this method are the flexibility and the wide variety of possible scenarios.
+The main disadvantages are the complexity of the implementation, the lack of precise control over
+the noise injected and the fact that the heading error distance is fixed and cannot be changed after
+the dataset has been generated.
+
+\subsubsection{New method}
+The new data collection method is design with 3 main objectives: simplifying the 
+
 %explain the main steps of the pipeline
 % -Data collection
 % -explaining data collection in simulator
@@ -627,7 +680,6 @@ Read code not pdf here.....
 %         -(camera orientation, requires redoing all videos)
 %         -(camera position, requires redoing all videos)
 
-    Talk about Gazebo and ros
     % talk about gazeebo, ros, the initial setup with automobile_data, then talk about the new setup,
     % that uses services to directly cotntrol the car and why it is more useful, than talk about the
     % path semplification, to eprove points not to be accurate
@@ -699,7 +751,7 @@ Read code not pdf here.....
 \subsection{Online estimation}
     Talk about the online estimationq
 
-\section{Results}
+\section{Results} \label{sec:results}
 
 \subsection{Experimental setup} \label{sec:exp_setup}
 -Experimental setup
