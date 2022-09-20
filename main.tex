@@ -887,10 +887,20 @@ the images. To achieve this, we apported a series of modifications:
         \item \textbf{Pooling}: max pooling with a kernel size of 2x2 and a stride of 2. It converts
         the 10x10 image to 5x5.
         \item \textbf{Dropout}: 30\% probability.
-        \item 
+        \item \textbf{3rd 2D convolution}: 32 filters, with a kernel size of 5x5 and a stride of 1.
+        It converts the 5x5 image to 1x1.
+        \item \textbf{ReLU}: activation function.
+        \item \textbf{Flatten}: flattens the 1x1 image to a vector of 32 elements.
+        \item \textbf{1st fully connected}: 16 neurons.
+        \item \textbf{ReLU}: activation function.
+        \item \textbf{2nd fully connected}: output layer, 1 neuron.
     \end{itemize}  
 
-    The network architecture is shown in Figure \ref{fig:network_architecture}.
+    The network takes as input a 32x32 grayscale image and outputs a single value representing the heading
+    error. 
+
+    The network architecture is shown in Figure \ref{fig:network_architecture}. The pytorch
+    implementation can be found in the appendix.
 
     \begin{figure}
         \centering
