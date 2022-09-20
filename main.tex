@@ -13,6 +13,10 @@
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{fadings}
+
 \DeclareMathOperator*{\argmin}{arg\,min}
 
 \makeatletter
@@ -237,7 +241,7 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \includegraphics[width=0.6\linewidth]{a.pdf}
         \caption{Heading Error}
         \label{fig:heading_error}
     \end{figure}
@@ -264,7 +268,7 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \includegraphics[width=0.6\linewidth]{a.pdf}
         \caption{Example image from the camera}
         \label{fig:camera_example}
     \end{figure}
@@ -309,7 +313,7 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \includegraphics[width=0.6\linewidth]{a.pdf}
         \caption{ Simulator image }
         \label{fig:simulator}
     \end{figure}
@@ -692,7 +696,7 @@ the images. To achieve this, we apported a series of modifications:
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\linewidth]{a.pdf}
+    \includegraphics[width=0.6\linewidth]{a.pdf}
     \caption{Original method and new method}
     \label{fig:original_vs_old}
 \end{figure}
@@ -715,7 +719,7 @@ the images. To achieve this, we apported a series of modifications:
 %         -(camera orientation, requires redoing all videos)
 %         -(camera position, requires redoing all videos)
 
-\subsection{Heading error calculation}
+\subsubsection*{Heading error calculation}
     In order to precisely calculate the heading error an algorithm has been developed that is a
     direct implementation of the common heading error definition in the PP controller
     \citep*{9368694}. The algorithm works by first finding the (normally 2) points at the distance
@@ -724,7 +728,7 @@ the images. To achieve this, we apported a series of modifications:
     point at all, which means the vehicle is too far from the path and the algorithm returns the
     closest point; or the one where there are $\geq 2$ points at the same distance, in this case the
     algorithm returns the further in the path. The algorithm is implemented in python and a
-    pseudocode for it can be seen in algorithm \ref*{alg:heading_error_calculation}. A graphical
+    pseudocode for it can be seen in Algorithm \ref*{alg:heading_error_calculation}. A graphical
     intuition of the algorithm can be seen in figure \ref*{fig:heading_error_calculation}. 
     
     \begin{algorithm}
@@ -759,7 +763,7 @@ the images. To achieve this, we apported a series of modifications:
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \includegraphics[width=0.6\linewidth]{a.pdf}
         \caption{Heading error calculation}
         \label{fig:heading_error_calculation}
     \end{figure}
@@ -809,7 +813,7 @@ the images. To achieve this, we apported a series of modifications:
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \includegraphics[width=0.6\linewidth]{a.pdf}
         \caption{Preprocessing steps}
         \label{fig:preprocessing_steps}
     \end{figure}
@@ -846,14 +850,59 @@ the images. To achieve this, we apported a series of modifications:
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \includegraphics[width=0.6\linewidth]{a.pdf}
         \caption{Augmentation steps}
         \label{fig:augmentation_steps}
     \end{figure}
 
         
 \subsection{Neural network training}
-    Talk aboout the training
+    In this section we will discuss the neural network architecture and the training process. When
+    thinking about the design of the neural network one must take into account the fact that it will
+    have to run on a real-time embedded system, and not a cluster of powerful GPUs. This means that 
+    the neural network must be as small as possible, while still being able to perform well. Another
+    important requirement is to being able to generalize well from the simulated data to the real data.
+
+\subsubsection*{Network Architecture}
+    In order to keep up with the performance required by the real-time constraints, the neural
+    network has been designed with very few layers and very few parameters. The network architecture
+    is inspired by the LeNet-5 \citep*{lecun} architecture, which is a very simple convolutional
+    network that was originally designed for handwritten digit recognition. The design has been
+    improved with the addition of batch normalization \citep*{batch_norm} and dropout
+    \citep*{dropout}.
+    The network is structured as a sequence of convolutional layers, followed by a sequence of fully
+    connected layers; more specifically, the layers are the following:
+    \begin{itemize}
+        \item \textbf{1st 2D convolution}: 4 filters, with a kernel size of 5x5 and a stride of 1.
+        It converts the original 32x32 image to 28x28.
+        \item \textbf{ReLU}: activation function.
+        \item \textbf{Dropout}: 30\% probability.
+        \item \textbf{Pooling}: max pooling with a kernel size of 2x2 and a stride of 2. It converts
+        the 28x28 image to 14x14.
+        \item \textbf{Batch normalization}: normalization of the output of the previous layer.
+        \item \textbf{2nd 2D convolution}: 16 filters, with a kernel size of 5x5 and a stride of 1.
+        It converts the 14x14 image to 10x10.
+        \item \textbf{ReLU}: activation function.
+        \item \textbf{Dropout}: 30\% probability.
+        \item \textbf{Pooling}: max pooling with a kernel size of 2x2 and a stride of 2. It converts
+        the 10x10 image to 5x5.
+        \item \textbf{Dropout}: 30\% probability.
+        \item 
+    \end{itemize}  
+
+    The network architecture is shown in Figure \ref{fig:network_architecture}.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\linewidth]{a.pdf}
+        \caption{Network architecture}
+        \label{fig:network_architecture}
+    \end{figure}
+
+\subsubsection*{Training}
+    keep practicing boy
+
+
 % -Neural Network Estimation
     % -objectives of the network
     %     -estimating heading error
@@ -940,6 +989,9 @@ the images. To achieve this, we apported a series of modifications:
 
 \subsection{Datasets analysis}
 Talk about the datasets, the possible variations, lots of images
+
+\subsection{Network analysis}
+Talk about the network, lots of images
 
 \subsection{Analysis of hyperparameters}
     Talk about the big hyperparameters study and how it has been implemented
@@ -1358,6 +1410,35 @@ consider adding derivation of the pure pursuit
         year = {2017},
         copyright = {arXiv.org perpetual, non-exclusive license}
         }
+    %lecun
+    @article{lecun,
+        author = {Lecun, Yann and Haffner, Patrick and Bengio, Y.},
+        year = {2000},
+        month = {08},
+        pages = {},
+        title = {Object Recognition with Gradient-Based Learning}
+        }
+    @misc{batch_norm,
+        doi = {10.48550/ARXIV.1502.03167},
+        url = {https://arxiv.org/abs/1502.03167},
+        author = {Ioffe, Sergey and Szegedy, Christian},
+        keywords = {Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
+        title = {Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift},
+        publisher = {arXiv},
+        year = {2015},
+        copyright = {arXiv.org perpetual, non-exclusive license}
+      }
+    @article{dropout,
+      author  = {Nitish Srivastava and Geoffrey Hinton and Alex Krizhevsky and Ilya Sutskever and Ruslan Salakhutdinov},
+      title   = {Dropout: A Simple Way to Prevent Neural Networks from Overfitting},
+      journal = {Journal of Machine Learning Research},
+      year    = {2014},
+      volume  = {15},
+      number  = {56},
+      pages   = {1929--1958},
+      url     = {http://jmlr.org/papers/v15/srivastava14a.html}
+    }
+      
 
 
 
