@@ -140,7 +140,7 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
     this, in the model vehicle we were working on we were able to directly
     control only the steering angle and the vehicle velocity. 
 
-    \subsubsection{The Bicycle Model}
+    \subsubsection*{The Bicycle Model}
     The bicycle model represents the foundation for vehicle modelling,
     the more complete models are build on top of this model by removing or
     lightening some of its assumptions. 
@@ -185,7 +185,7 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
         \label{fig:bicycle_model}
     \end{figure}
 
-    \subsubsection{Pure Pursuit and Heading Error}
+    \subsubsection*{Pure Pursuit and Heading Error}
     Pure pursuit is a tracking algorithm that works by calculating the curvature that will move a vehicle
     from its current position to some goal position. The whole point of the algorithm is to choose a goal
     position that is some distance ahead of the vehicle on the path. The name pure pursuit comes from
@@ -242,7 +242,7 @@ Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
         \label{fig:heading_error}
     \end{figure}
 
-    \subsubsection{Camera}
+    \subsubsection*{Camera}
     The camera is the main sensor used to perform the heading error estimation.
     In the model car it is positioned about 20 cm above the ground. It is oriented 20 degrees downward in order to see also the closer
     section of the road. The camera is a standard \textit{Raspberry Pi Camera}
@@ -632,7 +632,7 @@ control. In order to study the influence of the dataset collection parameters on
 performance, in this thesis we will use and focus mostly on the second method, however the original
 method will also be described since it shares most of the ideas.
 
-\subsubsection{Original method}
+\subsubsection*{Original method}
 The Gazebo simulator is very convenient for developing since every simulated model and sensor
 information is published on a \textit{ROS} topic, and the car can also be controlled by publishing
 steering and throttle commands on their respective topics. This is very useful since it allows to
@@ -668,7 +668,7 @@ The main disadvantages are the complexity of the implementation, the lack of pre
 the noise injected and the fact that the heading error distance is fixed and cannot be changed after
 the dataset has been generated.
 
-\subsubsection{New method}
+\subsubsection*{New method}
 The new data collection method is designed to solve the previous method main issues: reducing the
 code complexity, fine controlling the noise injected and generate the heading error independently of
 the images. To achieve this, we apported a series of modifications:
@@ -771,9 +771,57 @@ the images. To achieve this, we apported a series of modifications:
 %talk about the initial method that was fixed wrt the dataset, and then the new setup that allows
 %for more flxibility, then talk about the algorithm, add image to explain algorithm
 
-\subsection{Dataset}
-    Dataset generation
+\subsection{Dataset generation}
+    With dataset generation we mean the process of converting the collected raw data into
+    well-defined dataset that can be used for training. In this section we will discuss the 2 main
+    steps for the images to be ready for training: image preprocessing and image augmentation.
 
+    \subsubsection*{Image preprocessing}
+    Image preprocessing is applied both to the images collected in the simulator and to the images
+    processed in real time for online estimation. The 3 main goals of the preprocessing are reducing the 
+    amount of information in the image to the minimum required for the task at hand, standardizing
+    the images to make the real and simulated data more comparable, and reducing the computational 
+    cost. The preprocessing main steps are the following:
+    \begin{itemize}
+        \item \textbf{Gray scale conversion}: all the images are converted from RGB to gray scale.
+        This is done because the color information is not relevant for the task at hand (and the
+        images are already mostly black and white) and because it reduces the computational cost.
+        \item \textbf{Crop}: the images are cropped to remove the top section. The reason for this
+        is the fact that the top section of the image contains the sky and the horizon and the very
+        far away section of the road, which does not contain any relevant information. The
+        percentage of the image kept is a hyperparameter that can be tuned. The influence of this
+        parameter will be discussed in the Results section (\ref*{sec:results}).
+        \item \textbf{First resize}: the images are resized to double the final size. In this case
+        to a square of 64x64 pixels. This is done to reduce the computational cost of the algorithm
+        and to preserve only the most predominant features of the image. The reason for the square
+        is that is very convenient for the convolutional neural network to have the same number of 
+        pixels in the height and width of the image.
+        \item \textbf{Canny edge detection}: the images are processed with the Canny edge detector
+        \citep*{canny}, which is a very common edge detection algorithm. Edge detection is the key
+        component for making the images more comparable between the real and simulated data, since
+        it removes any brightness and contrast variations that are present in the real images, and
+        outputs a binary image. The Canny algorithm has 2 parameters that can be tuned to filter the
+        edges by strength and by length.   
+        \item \textbf{Blur}: the images are blurred with a Gaussian filter. This is done to smooth
+        the binary image, since the neural network performs worse with binary images. This is also
+        done to prepare the images for the next step. 
+        \item \textbf{Second resize}: the images are resized to the final size. In this case to a
+        square of 32x32 pixels. This very small size has been chosen because in this way only the
+        very predominant features of the image are preserved, and the neural network can learn to
+        recognize them more easily and reliably. Not to mention that the computational cost is
+        drastically reduced with this small size.
+    \end{itemize}
+    The preprocessing steps are shown in Figure \ref{fig:preprocessing_steps}.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{a.pdf}
+        \caption{Preprocessing steps}
+        \label{fig:preprocessing_steps}
+    \end{figure}
+
+    \subsubsection*{Image augmentation}
+    lool 
 %talk about the dataset generation pipeline, from the raw images to the preprocessing to the data augmentation
 
 
@@ -1261,6 +1309,19 @@ consider adding derivation of the pure pursuit
         number={7},
         pages={5976-5992},
         doi={10.1109/TITS.2021.3070111}}
+
+    %CANNY
+    @article{canny,
+        author = {Canny, John},
+        year = {1986},
+        month = {12},
+        pages = {679 - 698},
+        title = {A Computational Approach To Edge Detection},
+        volume = {PAMI-8},
+        isbn = {9780080515816},
+        journal = {Pattern Analysis and Machine Intelligence, IEEE Transactions on},
+        doi = {10.1109/TPAMI.1986.4767851}
+        }
 
 
 \end{filecontents}
