@@ -771,8 +771,9 @@ the images. To achieve this, we apported a series of modifications:
 
 \subsection{Dataset generation}
     With dataset generation we mean the process of converting the collected raw data into
-    well-defined dataset that can be used for training. In this section we will discuss the 2 main
-    steps for the images to be ready for training: image preprocessing and image augmentation.
+    the set of couples of input images and labels that will used for training. In this section we
+    will discuss the 2 main steps for the images to be ready for training: image preprocessing and
+    image augmentation. 
 
     \subsubsection*{Image preprocessing}
     Image preprocessing is applied both to the images collected in the simulator and to the images
@@ -821,10 +822,10 @@ the images. To achieve this, we apported a series of modifications:
     \subsubsection*{Image augmentation}
     Image augmentation is a technique that is used to artificially increase the size of the dataset,
     in this case by slightly changing the images in the datasets. The main goal of the augmentation
-    is to increase the image number, however another goal is to make the images more similar to the real
-    images. First we start by noticing that the entire estimation problem of the heading error from
-    a frontal image is symmetric with respect to the vertical axis. This means that we can just flip
-    the image horizontally and invert the sign to the heading error to get a new valid sample for
+    is to increase the image number, however another goal is to make the images more similar to the
+    real images. First we start by noticing that the entire estimation problem of the heading error
+    from a frontal image is symmetric with respect to the vertical axis. This means that we can just
+    flip the image horizontally and invert the sign to the heading error to get a new valid sample for
     free. Aside from this symmetry, the data augmentation process can be summarized in the following
     steps:
     \begin{itemize}
@@ -839,7 +840,8 @@ the images. To achieve this, we apported a series of modifications:
         \item \textbf{Dilation/erosion}: images are dilated or eroded (with a 20\% probability for
         each one) with a random kernel. This is done to simulate the effect of having wider or
         narrower lane markings. 
-        \item \textbf{Preprocessing}: this is the preprocessing step, as described in the previous section.
+        \item \textbf{Preprocessing}: this is the preprocessing step, as described in the previous
+        section. 
         \item \textbf{Random shift}: the images are randomly shifted of a small amount of pixels
         across the vertical direction to account for possible camera misalignment. 
         \item \textbf{Noise}: the images are randomly corrupted with Gaussian noise, the variance
@@ -910,8 +912,28 @@ the images. To achieve this, we apported a series of modifications:
     \end{figure}
 
 \subsubsection*{Training}
-    keep practicing boy
+    In this section the training process will be described in detail. The main steps are the
+    following:
+    \begin{itemize}
+        \item \textbf{Dataset}: the dataset is split into a training set and a validation set, with
+        80\% of the data reserved for training and 20\% for validation. The data order is shuffled.
+        \item \textbf{Loss function}: the loss function is the mean squared error (MSE). Some tests
+        were performed with other losses such as the $L_1$ loss and the Huber loss, but the MSE was
+        found to be far more effective.
+        \item \textbf{Optimizer}: the optimizer used is the standard Adam optimizer, with a learning
+        rate of \num{3e-3}. The learning rate is a very delicate parameter and will be subject of a
+        further analysis.
+        \item \textbf{Training}: the training is performed for 600 epochs, with a batch size of
+        $2^{16}$. The number of epochs and the batch size are 2 hyperparameters that can be tuned, and will also be the
+        subject of a further analysis. 
+        \item \textbf{Validation}: the validation is performed at the end of each epoch, the
+        training algorithm keeps track of validation loss across the epochs, and the model with the
+        lowest loss is the one that gets saved at the end. This is done to prevent overfitting. It
+        is important to notice that the validation is performed on the validation set and not on
+        some real dataset; the real datasets are used only for testing and comparing different models.
+    \end{itemize}
 
+    The training is performed on a single NVIDIA GTX 1080 Ti GPU, using the pytorch framework. 
 
 % -Neural Network Estimation
     % -objectives of the network
@@ -962,7 +984,7 @@ the images. To achieve this, we apported a series of modifications:
     %     -state estimation
         % -reducing dataset size
 
-\subsection{Online estimation}
+\subsection*{Online estimation}
     Talk about the online estimationq
 
 \section{Results} \label{sec:results}
