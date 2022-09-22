@@ -933,7 +933,7 @@ the images. To achieve this, we apported a series of modifications:
         some real dataset; the real datasets are used only for testing and comparing different models.
     \end{itemize}
 
-    The training is performed on a single NVIDIA GTX 1080 Ti GPU, using the pytorch framework.  The
+    The training is performed on a single NVIDIA GTX 1080 Ti GPU, using the pytorch framework.
 
 % -Neural Network Estimation
     % -objectives of the network
@@ -980,12 +980,21 @@ the images. To achieve this, we apported a series of modifications:
     %     -(time coherence)
     %     -(continuity)
     %     -(multiple points estimation, path ahead)
-    %     -variable speed
-    %     -state estimation
+    %     -variable speed 
         % -reducing dataset size
 
 \subsection*{Online estimation}
-    Talk about the online estimationq
+    In order to run on the real car, the network is converted from a pytorch model to an Onnx model
+    so that it can be used directly with the Opencv library, and we don't need to install the heavy
+    pytorch library on the embedded device (a Raspberry Pi 4). From this point onward the online
+    estimation is very straightforward: the image from the camera is preprocessed and fed to the
+    network, which estimates the heading error. The only difference is that the image is flipped,
+    and the network is run twice, once with the original image and once with the flipped image. An
+    average between the measures is then taken. This can be done thanks to the symmetry of the
+    problem and increases the accuracy of the estimation. Performance-wise, the network runs at
+    250-300 fps on the Raspberry Pi 4, which is more than enough for real-time estimation, and the
+    bottleneck is actually the camera frame-rate. The high efficiency of the architecture would
+    probably work fine on an even lower-end device. 
 
 \section{Results} \label{sec:results}
 
