@@ -120,9 +120,6 @@
             task.
     \end{itemize}
 
-\subsection{Scaled vehicle assembly}
-Descrizione del veicolo, da valutare se mettere nella sezione dei test/risulati
-
 \subsection{Vehicle model and characterization of the heading error}
     %Introduzione del modello fisico del veicolo + heading error + camera
     The entire car assembly is composed of the vehicle and a frontal camera. The
@@ -997,9 +994,71 @@ the images. To achieve this, we apported a series of modifications:
     probably work fine on an even lower-end device. 
 
 \section{Results} \label{sec:results}
+    In this section the results of the estimation system will be presented. The following are the
+    main topics that will be covered:
+    \begin{itemize}
+        \item \textbf{Experimental setup}: the vehicle assembly, the real track and the localization
+        system we used to test the system.
+        \item \textbf{Evaluation datasets analysis}: the evaluation dataset generation process, and the
+        differences between the generated sets.
+        \item \textbf{Network analysis}: layer activations and convolutional filters visualizations.
+        \item \textbf{Hyperparameters study}: hyperparameters exploration methods and results.
+        \item \textbf{Control loop application}: test of the estimation system in full control loop scheme.
+    \end{itemize}
+
 
 \subsection{Experimental setup} \label{sec:exp_setup}
--Experimental setup
+    In this section we will explore the experimental setup we used to collect the real world data.
+    The real vehicle model and assembly will be explained alongside with the localization system we
+    used to log its position and orientation, and the track where we run the tests.
+
+\subsubsection*{Scaled vehicle assembly}
+% https://boschfuturemobility.com/documentation/connectiondiagram.html
+
+    In figure \ref{fig:vehicle_assembly} the scaled vehicle assembly can be seen. The vehicle is a 1/10 scale
+    of a real car. In the picture we can see the car with the main motor and the steering servo. The
+    car is powered by a 2S LiPo battery. On top of the chassis we can see the refractive markers
+    that are used by the Vicon system.  
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\linewidth]{a.pdf}
+        \caption{Scaled vehicle assembly}
+        \label{fig:vehicle_assembly}
+    \end{figure}
+
+\subsubsection*{Real track and Vicon localization system}
+    In order to get the accurate position and orientation of the vehicle, we use a Vicon system.
+    This system consists in a set of cameras that are placed around the track, and that are able to
+    track any object that has a set of markers attached to it. The system operates at a nominal
+    frequency of 100 Hz, with some negligible packet loss, and return the measurements with a variable
+    latency from 150 to 200 ms. The Vicon system operate as a ros node, so we can easily get the
+    data reading the corresponding topic. 
+
+    To test the vehicle we designed a simple track with 3 straight lines connected by 3 turns with 2
+    different radii of curvature. The track is 12 meters long, and the straight lines are 2 meters
+    long. The track is shown in figure \ref{fig:track}. The track is made of a black surface, and
+    the lines are designed with white tape. The tape is 2 cm wide and the distance between the lines
+    is 38 cm. The track can be parameterized by the following equations:
+
+    \begin{equation}
+        \begin{cases}
+            x = 2 \cos(\theta) \\
+            y = 2 \sin(\theta)
+        \end{cases}
+    \end{equation}
+
+    The same exact has been reconstructed in the simulation environment, so that we can compare the
+    real and simulated data.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\linewidth]{a.pdf}
+        \caption{Real track}
+        \label{fig:track}
+    \end{figure}
+    
+
     % -explanation of the experimental setup in the sparcs lab, Vicon system etc..
     % -explanation of data collection methodologies
     % -analysis of performance wrt different parameters combinations and values, graphs tables etc..
@@ -1034,13 +1093,10 @@ Talk about the datasets, the possible variations, lots of images
 \subsection{Network analysis}
 Talk about the network, lots of images
 
-\subsection{Analysis of hyperparameters}
+\subsection{Hyperparameters study}
     Talk about the big hyperparameters study and how it has been implemented
 
-\subsection{Numerical results}
-    Talk about the results, the graphs, the tables, the numbers, the analysis
-
-\section{Control loop application}
+\subsection{Control loop application}
     Talk about the control loop, the implementation, the results, the analysis
 
 % -aggiungere il control loop
