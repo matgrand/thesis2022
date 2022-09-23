@@ -620,7 +620,7 @@ in the following subsections:
     camera frames.
 \end{enumerate}
 
-\subsection{Data collection}
+\subsection{Data collection} \label{sec:data_collection}
 
 The main idea of data collection is to use the \textit{Gazebo} simulator to generate an arbitrarily
 large set of images and the corresponding ground truth labels. During the developing process 2 main
@@ -1008,6 +1008,8 @@ the images. To achieve this, we apported a series of modifications:
         \item \textbf{Control loop application}: test of the estimation system in full control loop scheme.
     \end{itemize}
 
+\pagebreak
+
 
 \subsection{Experimental setup} \label{sec:exp_setup}
     In this section we will explore the experimental setup we used to collect the real world data.
@@ -1150,10 +1152,37 @@ the images. To achieve this, we apported a series of modifications:
     %         -
 
 \subsection{Evaluation datasets analysis}
-Talk about the datasets, the possible variations, lots of images
+To generate the real datasets we used the same process as the one used to generate the simulated
+datasets. With the difference that the true position and orientation of the vehicle is obtained not
+by means of the simulated environment but by means of the Vicon system. Another difference is that,
+since unfortunately we are not able to teleport the vehicle in the real world, we had to use the
+original method of generating the dataset, as explained in Section \ref{sec:data_collection}. The
+datasets have been generated using 8 different noise level in the steering: $0, 2, 4, 6, 8, 10, 12,
+14$ degrees. For each noise level the car performed 4 laps around the track clockwise, and 4 laps
+anticlockwise. The speed of the car was kept constant at $0.3\,\si{\meter\per\second}$. 
+
+The heading errors have been computed offline using the technique explained in Section
+\ref{sec:data_collection}. We considered 8 values for the heading error distance to test: $0.2, 0.3,
+0.4, 0.5, 0.6, 0.7, 0.8, 0.9$ meters.
+Figures \ref{fig:dataset_analysis1} and \ref{fig:dataset_analysis2} show respectively the actual path followed by
+the car against a reference path, and the true heading errors for each distance ahead.  %
+
+\begin{figure}
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.2\linewidth]{figures/dataset_analysis1.eps}}
+    \caption{Evaluation datasets path and reference path}
+    \label{fig:dataset_analysis1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/dataset_analysis2.eps}}
+    \caption{Evaluation datasets heading errors}
+    \label{fig:dataset_analysis2}
+\end{figure}
 
 \subsection{Network analysis}
-Talk about the network, lots of images
+    Talk about the network, lots of images  
 
 \subsection{Hyperparameters study}
     Talk about the big hyperparameters study and how it has been implemented
