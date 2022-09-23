@@ -12,7 +12,7 @@
 %pseudocode
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
-
+\usepackage{booktabs,paralist}
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing}
 \usetikzlibrary{fadings}
@@ -22,6 +22,8 @@
 \makeatletter
 \def\BState{\State\hskip-\ALG@thistlm}
 \makeatother
+
+\newcommand{\vect}[1]{\ensuremath{\textbf{#1}}}
 
 \let\ph\mlplaceholder % shorter macro
 \lstMakeShortInline"
@@ -871,7 +873,7 @@ the images. To achieve this, we apported a series of modifications:
     \citep*{dropout}.
     The network is structured as a sequence of convolutional layers, followed by a sequence of fully
     connected layers; more specifically, the layers are the following:
-    \begin{itemize}
+    \begin{itemize} % TODO convert to table
         \item \textbf{1st 2D convolution}: 4 filters, with a kernel size of 5x5 and a stride of 1.
         It converts the original 32x32 image to 28x28.
         \item \textbf{ReLU}: activation function.
@@ -1026,27 +1028,85 @@ the images. To achieve this, we apported a series of modifications:
         \caption{Scaled vehicle assembly}
         \label{fig:vehicle_assembly}
     \end{figure}
-
-\subsubsection*{Real track and Vicon localization system}
+    
+    \subsubsection*{Real track and Vicon localization system}
     In order to get the accurate position and orientation of the vehicle, we use a Vicon system.
     This system consists in a set of cameras that are placed around the track, and that are able to
     track any object that has a set of markers attached to it. The system operates at a nominal
     frequency of 100 Hz, with some negligible packet loss, and return the measurements with a variable
     latency from 150 to 200 ms. The Vicon system operate as a ros node, so we can easily get the
     data reading the corresponding topic. 
-
+    
     To test the vehicle we designed a simple track with 3 straight lines connected by 3 turns with 2
     different radii of curvature. The track is 12 meters long, and the straight lines are 2 meters
     long. The track is shown in figure \ref{fig:track}. The track is made of a black surface, and
     the lines are designed with white tape. The tape is 2 cm wide and the distance between the lines
     is 38 cm. The track can be parameterized by the following equations:
-
-    \begin{equation}
-        \begin{cases}
-            x = 2 \cos(\theta) \\
-            y = 2 \sin(\theta)
-        \end{cases}
-    \end{equation}
+    
+    \begin{align*}
+        \vect{r}_{12}(\theta)
+        &=
+        \begin{bmatrix}
+            x_c + R\cos\theta\\
+            \bigl(m+R_c\bigr)+R\sin\theta
+        \end{bmatrix}
+        & \theta\in[0,-\pi]\\
+        %
+        \vect{r}_{23}(\lambda)&=
+        \begin{bmatrix}
+            x_c - R\\
+            \lambda\bigl(m+R_c\bigr)+(1-\lambda)\bigl(m+R_c+L\bigr)
+        \end{bmatrix}
+        & \lambda\in[0,1]\\
+        %
+        \vect{r}_{34}(\theta)&=
+        \begin{bmatrix}
+            \bigl(x_c - R + r\bigr) + r\cos\theta\\
+            \bigl(m+R_c+L\bigr) + r\sin\theta
+        \end{bmatrix}
+        & \theta\in\left[-\frac{\pi}{2},-\frac{3\pi}{2}\right]\\
+        %
+        \vect{r}_{45}(\lambda)&=
+        \begin{bmatrix}
+            \lambda\bigl(x_c-R+r\bigr)+(1-\lambda)\bigl(x_c+R-r\bigr)\\
+            m+R_c+L+r
+        \end{bmatrix}
+        & \lambda\in[0,1]\\
+        %
+        \vect{r}_{56}(\theta)&=
+        \begin{bmatrix}
+            \bigl(x_c + R - r\bigr) + r\cos\theta\\
+            \bigl(m+R_c+L\bigr) + r\sin\theta
+        \end{bmatrix}
+        & \theta\in\left[-\frac{3\pi}{2},-2\pi\right]\\
+        %
+        \vect{r}_{61}(\lambda)&=
+        \begin{bmatrix}
+            x_c + R\\
+            \lambda\bigl(m+R_c+L\bigr)+(1-\lambda)\bigl(m+R_c\bigr)
+        \end{bmatrix}
+        & \lambda\in[0,1]\\
+    \end{align*}
+    
+    With $\vect{r}_{ij}(\cdot)$ representing each section of track, and with the symbols descriptions
+    and numerical values summarized in table \ref{tab:track_parameters}.
+    \begin{table}[!ht]
+        \centering
+        \begin{tabular}{>{$}c<{$}@{\hspace{1em}}l>{$}c<{$}}
+            \toprule
+            \textbf{Sym} & \textbf{Description} & \textbf{Value}\\\toprule
+            x_c 	& x coordinate of axis of symmetry                             & 1.5\,\si{\meter}\\\midrule
+            m 		& Margin from the edge		                        & 0.3\,\si{\meter}\\\midrule
+            R_c 	& Big radius of the center of the lane				& 1.04\,\si{\meter}\\\midrule
+            w		& Width of the lane									& 0.38\,\si{\meter}\\\midrule
+            R 		& Big radius of the track							& \left\{R_c-\frac{w}{2},R_c-\frac{w}{2}\right\}\\\midrule
+            r_c		& Small radius of the center of the lane			& 0.665\,\si{\meter}\\\midrule
+            r		& Small radius of the track							& \left\{r_c-\frac{w}{2},r_c-\frac{w}{2}\right\}\\\midrule
+            L		& Length of the straight section					& 2\,\si{\meter}\\\bottomrule
+        \end{tabular} 
+        \caption{Parameters of the test track}
+        \label{tab:track_parameters}
+    \end{table} 
 
     The same exact has been reconstructed in the simulation environment, so that we can compare the
     real and simulated data.
@@ -1054,10 +1114,11 @@ the images. To achieve this, we apported a series of modifications:
     \begin{figure}
         \centering
         \includegraphics[width=0.6\linewidth]{a.pdf}
-        \caption{Real track}
+        \caption{Test track}
         \label{fig:track}
     \end{figure}
     
+
 
     % -explanation of the experimental setup in the sparcs lab, Vicon system etc..
     % -explanation of data collection methodologies
@@ -1083,6 +1144,7 @@ the images. To achieve this, we apported a series of modifications:
     %         -batch size
     %         -optimizer
     %         -epochs
+    
     %     -image augmentation
     %         -noise level
     %         -
