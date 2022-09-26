@@ -722,13 +722,13 @@ the images. To achieve this, we apported a series of modifications:
     In order to precisely calculate the heading error an algorithm has been developed that is a
     direct implementation of the common heading error definition in the PP controller
     \citep*{9368694}. The algorithm works by first finding the (normally 2) points at the distance
-    $d_ahead$ required, and then selecting the one that is coherent with the car orientation. The
+    $d_{ahead}$ required, and then selecting the one that is coherent with the car orientation. The
     algorithm is robust with respect to the 2 possible edge cases of finding a single point or no
     point at all, which means the vehicle is too far from the path and the algorithm returns the
     closest point; or the one where there are $\geq 2$ points at the same distance, in this case the
     algorithm returns the further in the path. The algorithm is implemented in python and a
     pseudocode for it can be seen in Algorithm \ref*{alg:heading_error_calculation}. A graphical
-    intuition of the algorithm can be seen in figure \ref*{fig:heading_error_calculation}. 
+    intuition of the algorithm can be seen in Figure \ref*{fig:heading_error_calculation}. 
     
     \begin{algorithm}
         \caption{Calculate Heading Error}\label{alg:heading_error_calculation}
@@ -1091,7 +1091,7 @@ the images. To achieve this, we apported a series of modifications:
     \end{align*}
     
     With $\vect{r}_{ij}(\cdot)$ representing each section of track, and with the symbols descriptions
-    and numerical values summarized in table \ref{tab:track_parameters}.
+    and numerical values summarized in Table \ref{tab:track_parameters}.
     \begin{table}[!ht]
         \centering
         \begin{tabular}{>{$}c<{$}@{\hspace{1em}}l>{$}c<{$}}
