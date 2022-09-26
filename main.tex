@@ -1181,8 +1181,94 @@ the car against a reference path, and the true heading errors for each distance 
     \label{fig:dataset_analysis2}
 \end{figure}
 
+\pagebreak
+
 \subsection{Network analysis}
-    Talk about the network, lots of images  
+    It's usually very difficult to analyze modern neural networks, since they are very complex, and
+    they are composed of many layers and neurons; therefore it's very hard to identify how and where
+    the output is generated. In our case, since the network is very simple, we can actually have an
+    idea of the inner workings by looking at the weights, and in particular at the convolutional
+    kernels.  
+
+\subsubsection*{Convolutional kernels}
+    We start by looking directly at the convolutional kernels, that can be visualized as a group of 5x5 pixel
+    images. Figure \ref{fig:conv_kernels} shows the kernels of the first and second convolutional
+    layers, since it becomes more difficult to understand the kernels of the deeper layers, due to
+    the amount of linear combinations of the previous layers. As we can see, the first layers are
+    focused on finding diagonal lines in the images, and it's coherent with what we expect given the
+    task.
+    
+    Another way to visualize the convolutional kernels is to use the technique explained in
+    \citep*{uozbulak_pytorch_vis_2022}; which consists in generating an image that maximize the
+    activation of a single neuron. To generate the images we start from random noise, and we perform
+    backpropagation and optimization over the image to maximize the activation of the neuron,
+    leaving the network intact. This process is repeated for a fixed amount of iterations, until it
+    converges to a local optimal image for the specific neuron. The
+    results are shown in Figure \ref{fig:conv_kernels_best}. As we can see, the first layer is
+    reacting more to basic diagonal lines. In the second layer we can see that the first neuron is
+    starting to aggregate the basic lines into a more defined lane. In the third layer we can see
+    how the position of the features starts to matter, and the features are more complex. This
+    expected from theory and is a sign of a well-trained network. Not all then neurons are used, and
+    some features are redundant, this is normal and a consequence of dropout and regularization in training.
+    It's important to note the
+    fact that the image brightness has been normalized to the same value for all the images, so that
+    it's easier to compare them, but the actual brightness of the features is important for the
+    final value of the output. 
+
+\subsubsection*{Layer activations}
+    Another interesting way to get insights about the network is to look at the neuron activations of the
+    layers for some specific inputs. In order to do so 5 images have been selected from the test,
+    picturing a very sharp left turn, a weak left turn, a straight line, a weak right turn, and a
+    very sharp right turn. The images are shown in Figure \ref{fig:turns}, alongside with their
+    preprocessed version. Figure \ref{fig:activations} shows the activations of the linear layer
+    before the output layer, for the 5 images. As we can see, the activations are very different
+    from each other and almost all the activations seems to follow a monotonically increasing or
+    decreasing function. This is another good sign of coherence with the task.
+
+    Figure \ref{fig:conv_activations} shows the activations of the convolutional layers and the
+    pooling layers for the image of the straight section of the lane. As we can see, the different
+    neurons segment the image in different ways, and the features are aggregated in the deeper
+    layers. It is also possible to see how the pooling layers are reducing the dimensionality of the
+    image and how the features becomes more and more abstract, with fewer and fewer pixels. The
+    activations of the convolutional layers for the other images are shown in the appendix.
+
+
+ \begin{figure}
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{figures/conv_ker12.jpg}}
+    \caption{Convolutional kernels}
+    \label{fig:conv_kernels}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{figures/best_conv.jpg}}
+    \caption{Convolutional kernels best}
+    \label{fig:conv_kernels_best}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/turns.png}}
+    \caption{Turns}
+    \label{fig:turns}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/lin_acti.png}}
+    \caption{Activations of the linear layer}
+    \label{fig:activations}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/conv_act.png}}
+    \caption{Activations of the convolutional layers}
+    \label{fig:conv_activations}
+\end{figure}
+
+
 
 \subsection{Hyperparameters study}
     Talk about the big hyperparameters study and how it has been implemented
@@ -1191,6 +1277,7 @@ the car against a reference path, and the true heading errors for each distance 
     Talk about the control loop, the implementation, the results, the analysis
 
 % -aggiungere il control loop
+%valutare qualche test di tracking in simulazione 
 
 % -ENFATIZZARE L'ASSENZA DI RITARDO NELLA NN
 
@@ -1625,6 +1712,16 @@ consider adding derivation of the pure pursuit
       number  = {56},
       pages   = {1929--1958},
       url     = {http://jmlr.org/papers/v15/srivastava14a.html}
+    }
+    % cnn visualization github
+    @misc{uozbulak_pytorch_vis_2022,
+        author = {Utku Ozbulak},
+        title = {PyTorch CNN Visualizations},
+        year = {2019},
+        publisher = {GitHub},
+        journal = {GitHub repository},
+        howpublished = {\url{https://github.com/utkuozbulak/pytorch-cnn-visualizations}},
+        commit = {b7e60adaf64c9be97b480509285718603d1e9ba4}
     }
       
 
