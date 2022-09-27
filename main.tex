@@ -97,29 +97,30 @@
     autonomous driving: more specifically we want to target the problem of lane
     following in a vehicle equipped with a frontal camera. In particular, we
     want to estimate the heading error of the vehicle with respect to the center
-    of the lane and the structure of the road ahead of the vehicle, using only
-    local information about the car and the road. The idea behind the need of an
-    accurate estimation of these road parameters is that they can be used in a
+    of the lane, using only
+    local information about the car and the road, and with training of the system exclusively in a simulated environment. The idea behind the need of an
+    accurate estimation of this road parameter is that it can be used in a
     standard control strategy to perform lane following or other driving
     behaviors.
 
     The objective is to design a system which satisfy a set of reasonable
     constraint in a real drive situation:
     \begin{itemize}
-        \item The system should be able to accurately estimate the car position and
-            orientation in the lane. The accuracy should be measurable and
+        \item The system should be able to accurately estimate the vehicle heading error with
+        respect to the center of the lane. The accuracy should be measurable and
             quantifiable using some appropriate performance metrics.
-        \item The system should be able to estimate the structure of the lane
-            ahead using some appropriate parameters, with an accuracy measurable
-            and quantifiable using some appropriate performance metrics.
-        \item The system should operate in a real-time environment, with low
-            latency and high frequency, in order to be able to handle possible
-            obstacles and changes in the road.
+        \item The system should operate in a real-time environment, on low-end hardware, with low
+            latency and high frequency. This is a strict constraint that limits the complexity of
+            the system in order to be able to run it fast and efficiently on a Raspberry Pi 4.
         \item The estimation process should only use local information about the
             vehicle and the road, without the use of any other localization system
             or map; in order to increase the robustness in a loss-of-signal
             situation, and to mimic the way human drivers approach the same
             task.
+        \item The system should operate on a real vehicle, in a real environment, with a real
+            camera; but the training should be performed in a simulated environment. This is a
+            reasonable constraint since it limits the amount of expensive real world testing and
+            data necessary to train the system.
     \end{itemize}
 
 \subsection{Vehicle model and characterization of the heading error}
@@ -162,7 +163,7 @@
     \end{itemize}
 
     The idea is to consider only the vehicle speed and steering angle as inputs,
-    and use the model to estimate the x and y position as wheel as the vehicle
+    and use the model to estimate the $x$ and $y$ position as wheel as the vehicle
     heading direction using the model.
 
     Using the aforementioned assumptions, it is possible to derive the following
@@ -193,12 +194,12 @@
     from its current position to some goal position. The whole point of the algorithm is to choose a goal
     position that is some distance ahead of the vehicle on the path. The name pure pursuit comes from
     the analogy that we use to describe the method. We tend to think of the vehicle as chasing a point
-    on the path some distance ahead of it - it is pursuing that moving point. That analogy is often used
+    on the path some distance ahead, it is pursuing that moving point. That analogy is often used
     to compare this method to the way humans drive. We tend to look some distance in front of the car
     and head toward that spot. This lookahead distance changes as we drive to reflect the twist of the
     road and vision occlusions\cite{coulter1992implementation}.
 
-    The heading error (HE) is the key parameter to be estimated, as it is the
+    The heading error (HE, $\alpha$) is the key parameter to be estimated, as it is the
     starting point of the pure pursuit control strategy\citep{7796574,9368694}.
     The HE is defined as the angle between the vehicle heading direction and the
     line that connects the lookahead point and the center of rear axle of the
@@ -225,18 +226,15 @@
         \item Calculate the closest point $p_0$ on the path to the vehicle position,
         using the standard euclidean distance.
         \item Calculate the lookahead point on the path, using the lookahead
-        distance $l_c$ from $p_0$. In this case we consider the arc
-        length\footnote{The reasons behind the use of the arc length rather than
-        the standard euclidean distance is that the existence and uniqueness of
-        the lookahead point is guaranteed only by using the arc length.
-        Moreover, for small curvature paths, the metrics lead to very similar values.}
+        distance $l_c$ from $p_0$.
         \item Convert the lookahead point to the vehicle coordinate system
         \item Calculate the heading error
     \end{enumerate}
     It is important to note that this process makes use of the position and
     orientation of the vehicle in the global frame of reference; therefore it
     can be used only in a simulated environment. This is indeed the algorithm
-    used to generate the training datasets. 
+    used to generate the training datasets. The algorithm implementation is a little more delicate
+    and explained in detail in section \ref{sec:data_collection}.
 
     \begin{figure}
         \centering
@@ -281,7 +279,7 @@
     the quality of the simulation. 
 
     For the simulation environment, we use the \textit{Gazebo
-    simulator}\citep*{1389727}, which is a powerful simulator normally used in
+    simulator}\citep*{1389727}, which is a powerful simulator commonly used in
     robotics. The reasons behind the use of this simulator are the fact that
     it's open source and does not require extreme hardware to run, moreover we
     were able to use assets that were given to us by the organizers of the
@@ -305,19 +303,20 @@
         rate. The flow of images is easily accessible through \textit{ROS}.
     \end{itemize}
 
-    The simulator has been run on a laptop with an \textit{Intel Core i7-7500U}
+    The simulator has been run first on a laptop with an \textit{Intel Core i7-7500U}
     processor, an \textit{NVIDIA GeForce GTX 950M} graphics card and 16 GB of
-    RAM.
+    RAM; and later on a desktop with an \textit{AMD Ryzen 5 3600} processor paired with a
+    \textit{NVIDIA GeForce GTX 1080Ti} graphics card and 32 GB of RAM.  
     
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.6\linewidth]{a.pdf}
+        \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{imgs/gazebo_img.png}}
         \caption{ Simulator image }
         \label{fig:simulator}
     \end{figure}
 
-
+\clearpage
 
 \section{Optimal path}
 
@@ -454,6 +453,7 @@
         \label{fig:path}
     \end{figure}
 
+\clearpage
 
 \section{Performance metrics}
 
@@ -463,9 +463,9 @@
     the center line is strictly related to the problem of the road estimation itself. 
 
     In this section we will analyze a set of metrics found in the literature, and we will propose a
-    different metric that we believe is more appropriate for our problem. 
+    metric that we believe is more appropriate for our problem. 
 
-    It is very important to make an initial distinction between two, very related but
+    It is very important to make an initial distinction between two, very related, but
     different, approaches to the performance evaluation of lane detection and tracking systems: the
     first one consists in comparing the estimation capabilities of the whole systems (estimation
     \textit{and} control) by means of evaluating the tracking performance in a real or simulated
@@ -519,17 +519,18 @@
         proposed method.
     \end{itemize}
     There are several other metrics in the literature that are of little interest in our particular
-    application. 
+    application.  
 
     \subsection{Proposed metric}
     Since in our particular application we are interested in the heading error, which is a scalar
-    quantity, a very natural choice for a performance metric is the mean squared error (MSE) with
-    respect to the ground truth. The main issue with this approach is how to retrieve the ground
+    quantity, a very natural choice for a performance metric is the squared error of the single sample with
+    respect to the perfect ground truth, that can extended to evaluate a set of samples using the
+    standard deviation (STD) of the errors. The main issue with this approach is how to retrieve the ground
     truth. In the simulated environment it is very easy since we have access to the precise absolute position
     and orientation of the car. In the real case it is more challenging, but with the experimental
     setup we used, explained in section \ref*{sec:exp_setup} we were able to retrieve a precise
     position and orientation, therefore we have an accurate ground truth that can be used to
-    evaluate the estimation performance and to compare different methods. In addition to the MSE,
+    evaluate the estimation performance and to compare different methods. In addition to the STD,
     the mean absolute error can also be considered with the same rationale, which is less dependent
     on outliers. 
 
@@ -538,11 +539,13 @@
     of heading errors, since we are not expecting any sudden changes in the road ahead or in the car
     position. This metric becomes particularly important if we plan to use a control system on top
     with some parameters that are dependent on the variation of the heading error, like, for
-    example, a PID controller with a derivative term. 
+    example, a PID controller with a derivative term. The continuity metric is calculated as the
+    standard deviation of the sequence of differences between consecutive samples, with respect to
+    the ground truth.    
 
     Lastly, we can also consider the computational efficiency of the algorithm and the
     generalization capabilities of the system from the simulated environment to the real one, which
-    is a very important aspect of this estimation method.  
+    is a very important aspect of this estimation method.   
 
     \begin{figure}
         \centering
@@ -610,7 +613,7 @@ in the following subsections:
     previously generated datasets. It's important to separate this step from the previous one, in
     order to allow a more general approach to the problem.
     \item \textbf{Dataset generation}: this step consists in generating the datasets that will be used to
-    train the network, it is when data preprocessing and augmentation are applied, 2 key components
+    train the network, it is when data preprocessing and augmentation are applied: two key components
     of the proposed method.
     \item \textbf{Network training}: this step consists in training the network using the previously
     generated dataset. The network architecture will be discussed, together with the training
@@ -620,6 +623,8 @@ in the following subsections:
     camera frames.
 \end{enumerate}
 
+\pagebreak
+
 \subsection{Data collection} \label{sec:data_collection}
 
 The main idea of data collection is to use the \textit{Gazebo} simulator to generate an arbitrarily
@@ -628,8 +633,8 @@ methods were designed in order to solve the task. The original method was tailor
 aspects of the challenge, and was therefore designed to solve not only the data collection problem
 but also any other aspect of the challenge that could be tested in a simulated environment, such as
 the high level logic, the control system, the interface with the additional simulated sensors, etc.
-The second method was designed after the challenge to be specific with respect to the data
-collection problem. The second method heavily simplifies the interface and the complexity required
+The second method was designed after the challenge to be specific with respect to the heading error
+estimation problem. The second method heavily simplifies the interface and the complexity required
 to control the car in the simulator, and allows to generate the dataset with a much finer level of
 control. In order to study the influence of the dataset collection parameters on the final
 performance, in this thesis we will use and focus mostly on the second method, however the original
@@ -1268,10 +1273,15 @@ the car against a reference path, and the true heading errors for each distance 
     \label{fig:conv_activations}
 \end{figure}
 
-
+\clearpage
 
 \subsection{Hyperparameters study}
-    Talk about the big hyperparameters study and how it has been implemented
+    % params: #learning: dropout, lr, epochs, (regularization)
+    % steer noise level, heading error dist, w/wo canny, keep_bottom, blur, img-noise
+
+
+
+
 
 \subsection{Control loop application}
     Talk about the control loop, the implementation, the results, the analysis
