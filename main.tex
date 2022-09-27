@@ -65,7 +65,21 @@
 
 
 \section{Abstract}
-    The goal of this master thesis is to develop an original approach to lane estimation for scaled vehicles using a front-mounted camera and convolutional neural networks. The key components of this estimation process are the fact that all the training is performed in simulation using a noisy path; and the online inference is performed on low end hardware (raspberry pi 4) in an efficient and responsive way, while being very accurate. The heading error of the standard pure pursuit controller is chosen as estimation target. A clothoid based centerline has been chosen as training path for its several advantages in the analyzed scenario. Different performance metrics are evaluated and the standard mean squared error is found to be the more effective. An analysis on the hyperparameters (image dimension, lookahead distance, network complexity, training variability, and others) is performed in order to find the best combinations and evaluate the impact of each parameter. From the results in a real world scenario a very small network and image and a very high training variability resulted as the best overall combination, with the network complexity and training variability playing a major role in the accuracy of the system. The whole process is finally tested in a real life control loop achieving very good performance, allowing for precise lane tracking using delayless local estimation.
+    The goal of this master thesis is to develop an original approach to lane estimation for scaled
+    vehicles using a front-mounted camera and convolutional  neural networks. The key components of
+    this estimation process are the fact that all the training is performed in simulation using a
+    noisy path; and the online inference is performed on low-end hardware (Raspberry Pi 4) in an
+    efficient and responsive way, while being very accurate. The heading error of the standard pure
+    pursuit controller is chosen as estimation target. A clothoid based centerline has been chosen
+    as training path for its several advantages in the analyzed scenario. Different performance
+    metrics are evaluated and the standard devistion of the error is found to be the more effective. An
+    analysis on the hyperparameters (image dimension, lookahead distance,
+    training variability, and others) is performed in order to find the best combinations and
+    evaluate the impact of each parameter. From the results in a real world scenario a very small
+    network and image and a very high training variability resulted as the best overall combination,
+    with the network complexity and training variability playing a major role in the accuracy of the
+    system. The whole process is finally tested in a real life control loop achieving very good
+    performance, allowing for precise lane tracking using delayless local estimation.
     \newpage
 
 % Table of Contents
