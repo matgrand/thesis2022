@@ -190,9 +190,9 @@
     \end{figure}
 
     \subsubsection*{Pure Pursuit and Heading Error}
-    Pure pursuit is a tracking algorithm that works by calculating the curvature that will move a vehicle
+    Pure pursuit (PP) is a tracking algorithm that works by calculating the curvature that will move a vehicle
     from its current position to some goal position. The whole point of the algorithm is to choose a goal
-    position that is some distance ahead of the vehicle on the path. The name pure pursuit comes from
+    position that is some distance ahead of the vehicle on the path. The name PP comes from
     the analogy that we use to describe the method. We tend to think of the vehicle as chasing a point
     on the path some distance ahead, it is pursuing that moving point. That analogy is often used
     to compare this method to the way humans drive. We tend to look some distance in front of the car
@@ -200,7 +200,7 @@
     road and vision occlusions\cite{coulter1992implementation}.
 
     The heading error (HE, $\alpha$) is the key parameter to be estimated, as it is the
-    starting point of the pure pursuit control strategy\citep{7796574,9368694}.
+    starting point of the PP control strategy\citep{7796574,9368694}.
     The HE is defined as the angle between the vehicle heading direction and the
     line that connects the lookahead point and the center of rear axle of the
     vehicle. The lookahead point is defined as the point on the path on a fixed (or
@@ -700,7 +700,7 @@ the images. To achieve this, we apported a series of modifications:
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.6\linewidth]{a.pdf}
+    \includegraphics[width=1.0\linewidth]{figures/old_vs_new.eps}
     \caption{Original method and new method}
     \label{fig:original_vs_old}
 \end{figure}
@@ -772,6 +772,7 @@ the images. To achieve this, we apported a series of modifications:
         \label{fig:heading_error_calculation}
     \end{figure}
 
+\clearpage
 
 \subsection{Dataset generation}
     With dataset generation we mean the process of converting the collected raw data into
@@ -818,16 +819,20 @@ the images. To achieve this, we apported a series of modifications:
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.6\linewidth]{a.pdf}
+        \includegraphics[width=\linewidth]{figures/data_preprocessing.eps}
         \caption{Preprocessing steps}
         \label{fig:preprocessing_steps}
-    \end{figure}
+    \end{figure} 
+
+    \clearpage
 
     \subsubsection*{Image augmentation}
     Image augmentation is a technique that is used to artificially increase the size of the dataset,
-    in this case by slightly changing the images in the datasets. The main goal of the augmentation
-    is to increase the image number, however another goal is to make the images more similar to the
-    real images. First we start by noticing that the entire estimation problem of the heading error
+    in this case by slightly changing the images in the datasets. The main goals of the augmentation
+    are increasing the amount of images, and making the simulator images more similar to the
+    real images. 
+    
+    We start by noticing that the entire estimation problem of the heading error
     from a frontal image is symmetric with respect to the vertical axis. This means that we can just
     flip the image horizontally and invert the sign to the heading error to get a new valid sample for
     free. Aside from this symmetry, the data augmentation process can be summarized in the following
@@ -856,10 +861,12 @@ the images. To achieve this, we apported a series of modifications:
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.6\linewidth]{a.pdf}
+        \includegraphics[width=\linewidth]{figures/data_augmentation.eps}
         \caption{Augmentation steps}
         \label{fig:augmentation_steps}
     \end{figure}
+
+\clearpage
 
         
 \subsection{Neural network training}
@@ -920,21 +927,23 @@ the images. To achieve this, we apported a series of modifications:
     following:
     \begin{itemize}
         \item \textbf{Dataset}: the dataset is split into a training set and a validation set, with
-        80\% of the data reserved for training and 20\% for validation. The data order is shuffled.
+        80\% of the data reserved for training and 20\% for validation. The data order is shuffled
+        to reduce correlation between datapoints.
         \item \textbf{Loss function}: the loss function is the mean squared error (MSE). Some tests
         were performed with other losses such as the $L_1$ loss and the Huber loss, but the MSE was
         found to be far more effective.
         \item \textbf{Optimizer}: the optimizer used is the standard Adam optimizer, with a learning
         rate of \num{3e-3}. The learning rate is a very delicate parameter and will be subject of a
         further analysis.
-        \item \textbf{Training}: the training is performed for 600 epochs, with a batch size of
+        \item \textbf{Training}: the training is performed for 200 epochs, with a batch size of
         $2^{16}$. The number of epochs and the batch size are 2 hyperparameters that can be tuned, and will also be the
         subject of a further analysis. 
         \item \textbf{Validation}: the validation is performed at the end of each epoch, the
         training algorithm keeps track of validation loss across the epochs, and the model with the
         lowest loss is the one that gets saved at the end. This is done to prevent overfitting. It
-        is important to notice that the validation is performed on the validation set and not on
-        some real dataset; the real datasets are used only for testing and comparing different models.
+        is important to notice that the validation step is performed on the 20\% section of the
+        training set and not on real-world datasets; the real datasets are used only for testing and
+        comparing different models.
     \end{itemize}
 
     The training is performed on a single NVIDIA GTX 1080 Ti GPU, using the pytorch framework.
@@ -999,6 +1008,8 @@ the images. To achieve this, we apported a series of modifications:
     250-300 fps on the Raspberry Pi 4, which is more than enough for real-time estimation, and the
     bottleneck is actually the camera frame-rate. The high efficiency of the architecture would
     probably work fine on an even lower-end device. 
+
+\pagebreak
 
 \section{Results} \label{sec:results}
     In this section the results of the estimation system will be presented. The following are the
@@ -1182,11 +1193,12 @@ the car against a reference path, and the true heading errors for each distance 
 \begin{figure}
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/dataset_analysis2.eps}}
-    \caption{Evaluation datasets heading errors}
+    \caption{Evaluation datasets heading errors for the first lap}
     \label{fig:dataset_analysis2}
 \end{figure}
 
-\pagebreak
+
+\clearpage
 
 \subsection{Network analysis}
     It's usually very difficult to analyze modern neural networks, since they are very complex, and
@@ -1310,7 +1322,7 @@ consider adding full derivation of the bicycle model \url{https://www.youtube.co
 \subsection{Python implementation of heading error calculation}
 add the python version of the previously described algorithm.
 
-consider adding derivation of the pure pursuit
+consider adding derivation of the PP
 \url{https://ieeexplore.ieee.org/document/9368694}
 
 
