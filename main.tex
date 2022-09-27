@@ -869,7 +869,7 @@ the images. To achieve this, we apported a series of modifications:
 \clearpage
 
         
-\subsection{Neural network training}
+\subsection{Neural network training} \label{sec:nn_training}
     In this section we will discuss the neural network architecture and the training process. When
     thinking about the design of the neural network one must take into account the fact that it will
     have to run on a real-time embedded system, and not a cluster of powerful GPUs. This means that 
@@ -1260,7 +1260,7 @@ the car against a reference path, and the true heading errors for each distance 
 \begin{figure}
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{figures/best_conv.jpg}}
-    \caption{Convolutional kernels best}
+    \caption{Convolutional kernels optimal input}
     \label{fig:conv_kernels_best}
 \end{figure}
 
@@ -1281,7 +1281,7 @@ the car against a reference path, and the true heading errors for each distance 
 \begin{figure}
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/conv_act.png}}
-    \caption{Activations of the convolutional layers}
+    \caption{Activations of the convolutional layers for stright heading error}
     \label{fig:conv_activations}
 \end{figure}
 
@@ -1290,6 +1290,98 @@ the car against a reference path, and the true heading errors for each distance 
 \subsection{Hyperparameters study}
     % params: #learning: dropout, lr, epochs, (regularization)
     % steer noise level, heading error dist, w/wo canny, keep_bottom, blur, img-noise
+    % preprocessing: blur, canny, keep_bottom, img-noise
+
+    In this section we study the effect of the different hyperparameters on the performance of the
+    network. Since there are a lot of parameters, the space of the possible combinations is huge, and
+    it's impossible to test all of them. Therefore, we have chosen to explore the parameters in 3
+    distinctive groups: 
+    \begin{itemize}
+        \item \textbf{Learning parameters}: dropout probability, learning rate, number of epochs,
+        $\mathcal{L}^2$ regularization.
+        \item \textbf{Dataset parameters}: steering noise level, heading error distance ahead.
+        \item \textbf{Preprocessing parameters}: blur kernel size, Canny, percentage of the image cut, image noise.
+    \end{itemize}
+
+    \subsubsection*{Methodology}
+    For each group of parameters, a set of values for each parameter is chosen. Then, for each
+    combination, the whole training process, as explained in Section \ref{sec:nn_training}, is
+    performed. The combination is evaluated on 3 sets of real datasets: a clean group of datasets,
+    with a steering noise $\sigma_s \leq 4$ deg, a very noisy group of datasets, with $\sigma_s \geq
+    10$ deg, and finally on the set of all the datasets. The performance is evaluated calculating
+    the standard deviation of the error between the network estimate and the ground truth, for each
+    sample of each dataset in the set. When evaluating the performance for a single parameter a mean
+    of the metric across all the combinations remaining parameters is calculated. When evaluating 2
+    parameters together, the mean is calculated across all the combinations of the remaining
+    parameters except the 2 parameters being evaluated. 
+
+    \subsubsection*{Learning parameters}
+    The learning parameters are the most delicate ones, since they are the ones that have the most
+    impact on the training process, and therefore on the final performance. With a bad choice of
+    learning rate or a wrong number of epochs, the training will not converge to a good solution,
+    resulting in extremely low estimation performance. The dropout probability and $\mathcal{L}^2$
+    regularization are also important, but have less impact than the previous 2 parameters, since
+    the range of acceptable values is larger. More specifically, the dropout probability should be
+    $\leq 0.5$, and the $\mathcal{L}^2$ regularization should be $\leq 0.1$. Figure
+    \ref{fig:learning_params} shows the influence of the different learning parameters on the
+    evaluation datasets. As we can see, the learning rate has a minimum at around $\num{5e-3}$. The
+    dropout has a minimum at around $\num{0.3}$, it's interesting to notice how the minimum actually
+    is closer to $\num{0.2}$ for the noisy datapoints, meaning that the network requires more
+    complexity in order to better estimate those datasets. The $\mathcal{L}^2$ regularization has a
+    minimum around $\num{0.01}$. The STD appears to monotonically decrease with the number of
+    epochs, but this is a consequence of taking the mean across the remaining combinations, and in
+    particular across the learning rates, in this case more epochs can actually compensate for a too
+    low learning rate. Figure \ref{fig:3d_lr_epochs} shows the STD for the different values of
+    learning rate and number of epochs. As we can see, the STD is very low at around $\num{200}$
+    epochs.
+    
+    \begin{figure}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \caption{STD for different learning parameters}
+        \label{fig:learning_params}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \caption{STD for different learning rates and number of epochs}
+        \label{fig:3d_lr_epochs}
+    \end{figure}
+
+\clearpage
+
+\subsubsection*{Dataset parameters}
+    The 2 most important dataset-related parameter are the amount of steering noise and the distance
+    ahead of the heading error. Figure \ref{fig:ds_parameters} shows the STD for different values of
+    these parameters. The datasets without steering noise have the worse performance, since the
+    training lacks variability. The best value is around $\sigma_s = 12$ deg. The minimum is
+    actually slightly above $\sigma_s = 12$ deg for the noisy datasets, meaning that, very
+    intuitively, the noisy training datasets are better to estimate noisy evaluation datasets. 
+    Looking at the distance ahead of the heading error, we can see that the STD is quiet low for all
+    the datapoints, but has a minimum for the distance of $\num{0.4}$ m. The network is predictably
+    less accurate for further distances, since the heading error is less visible in the image. But,
+    it's very interesting to notice that also very close distance, like $\num{0.2}$ m, are harder to
+    estimate, probably because the camera is mounted too ahead w.r.t. the rear axis, from which the
+    distance is calculated. Figure \ref{fig:3d_noise_dist} shows the STD for different values of the
+    2 parameters. The STD follows a nice convex shape, with a minimum for the aforementioned values. 
+
+    \begin{figure}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \caption{STD for different dataset parameters}
+        \label{fig:ds_parameters}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \caption{STD for different steering noise and distance ahead}
+        \label{fig:3d_noise_dist}
+    \end{figure}
+
+\clearpage
+
 
 
 
