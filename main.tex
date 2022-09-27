@@ -1382,13 +1382,72 @@ the car against a reference path, and the true heading errors for each distance 
 
 \clearpage
 
+\subsubsection*{Preprocessing parameters}
+    The preprocessing parameters are the ones that have the least impact on the performance between
+    the one analyzed, but together they can have a significant impact. The most important one is the
+    Canny edge detection, which improves the performance by 30\% on average. 
+    Figure \ref{fig:preprocessing_params} shows the STD for the other parameters. 
+    The blur kernel size has a minimum at around $\num{3}$. The network performs better with low
+    image noise, with a minimum at around $40 / 255$. The percentage of the image cut has very
+    little influence on the performance, however, looking at Figure
+    \ref{fig:3d_keep_bottom_he_dist}, we can see that for estimating heading errors at further
+    distances it's better to use a larger percentage of the image.
+
+    \begin{figure}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \caption{STD for different preprocessing parameters}
+        \label{fig:preprocessing_params}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \caption{STD for different percentage of the image cut and distance ahead}
+        \label{fig:3d_keep_bottom_he_dist}
+    \end{figure}
+
+\clearpage
 
 
 
 
 
 \subsection{Control loop application}
-    Talk about the control loop, the implementation, the results, the analysis
+    In this section we will briefly discuss how the network performs in a real control loop
+    scenario. Two tests have been performed: 
+    \begin{itemize}
+        \item \textbf{Test 1}: The best network with a heading error distance of $\num{0.5} \si{\meter}$ has
+        been used. The network is fed with images from the camera mounted on the car. The heading
+        error is used as input of a PP controller that operates at a frequency of 30 Hz and acts on
+        the steering. 
+        The whole control scheme is implemented on a Raspberry Pi 4 mounted on the car. The vehicle
+        is kept at a constant velocity of $\num{0.3} \si{\meter\per\second}$.
+        \item \textbf{Test 2}: The best network with a heading error distance of $\num{0.8}\si{\meter}$  has
+        been used. The speed is increased to $\num{1.0} \si{\meter\per\second}$. The controller used
+        in this test is more advanced and considers also a derivative term and a speed profile that
+        slightly decrease the speed in sharp turns. 
+    \end{itemize}
+
+    The results of the two tests are shown in Figure \ref{fig:control_loop}. The first test shows
+    how the network, together with the PP controller, is able to keep the vehicle on the road and
+    perfectly tracking the centerline. 
+
+    In the second test the vehicle is able to remain inside the lane, even at high speed. The
+    tracking is not perfect since the whole control scheme is limited by the maximum steering rate
+    allowed by the steering actuator. An interesting point is how the network performs better than a
+    controller based on the true position of the vehicle obtained from the Vicon system. This is
+    because, due to the delay in the Vicon system, the controller is not able to react fast enough
+    and cannot keep the lane at high speeds.
+
+    \begin{figure}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \caption{Control loop results}
+        \label{fig:control_loop}
+    \end{figure}
+
+
 
 % -aggiungere il control loop
 %valutare qualche test di tracking in simulazione 
