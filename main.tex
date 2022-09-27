@@ -1322,8 +1322,8 @@ the car against a reference path, and the true heading errors for each distance 
     resulting in extremely low estimation performance. The dropout probability and $\mathcal{L}^2$
     regularization are also important, but have less impact than the previous 2 parameters, since
     the range of acceptable values is larger. More specifically, the dropout probability should be
-    $\leq 0.5$, and the $\mathcal{L}^2$ regularization should be $\leq 0.1$. Figure
-    \ref{fig:learning_params} shows the influence of the different learning parameters on the
+    $\leq 0.5$, and the $\mathcal{L}^2$ regularization should be $\leq 0.1$. Figures
+    \ref{fig:learning_params1} and \ref{fig:learning_params2} shows the influence of the different learning parameters on the
     evaluation datasets. As we can see, the learning rate has a minimum at around $\num{5e-3}$. The
     dropout has a minimum at around $\num{0.3}$, it's interesting to notice how the minimum actually
     is closer to $\num{0.2}$ for the noisy datapoints, meaning that the network requires more
@@ -1337,14 +1337,35 @@ the car against a reference path, and the true heading errors for each distance 
     
     \begin{figure}
         \centering
-        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
-        \caption{STD for different learning parameters}
-        \label{fig:learning_params}
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_dropout.eps}}
+        \end{subfigure}
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_L2_lambda.eps}}
+        \end{subfigure}
+        \caption{STD for different learning parameters (1)}
+        \label{fig:learning_params1}
     \end{figure}
 
     \begin{figure}
         \centering
-        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_lr.eps}}
+        \end{subfigure}
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_epochs.eps}}
+        \end{subfigure}
+        \caption{STD for different learning parameters (2)}
+        \label{fig:learning_params2}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/3d_plot_lr_epochs.eps}}
         \caption{STD for different learning rates and number of epochs}
         \label{fig:3d_lr_epochs}
     \end{figure}
@@ -1368,14 +1389,21 @@ the car against a reference path, and the true heading errors for each distance 
 
     \begin{figure}
         \centering
-        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_steer_noise_level.eps}}
+        \end{subfigure}
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_he_distance.eps}}
+        \end{subfigure}
         \caption{STD for different dataset parameters}
         \label{fig:ds_parameters}
     \end{figure}
 
     \begin{figure}
         \centering
-        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/3d_plot_steer_noise_level_he_distance.eps}}
         \caption{STD for different steering noise and distance ahead}
         \label{fig:3d_noise_dist}
     \end{figure}
@@ -1395,14 +1423,25 @@ the car against a reference path, and the true heading errors for each distance 
 
     \begin{figure}
         \centering
-        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_img_noise.eps}}
+        \end{subfigure}
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_blur.eps}}
+        \end{subfigure}
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_keep_bottom.eps}}
+        \end{subfigure}
         \caption{STD for different preprocessing parameters}
         \label{fig:preprocessing_params}
     \end{figure}
 
     \begin{figure}
         \centering
-        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/3d_plot_he_distance_keep_bottom.eps}}
         \caption{STD for different percentage of the image cut and distance ahead}
         \label{fig:3d_keep_bottom_he_dist}
     \end{figure}
@@ -1442,7 +1481,7 @@ the car against a reference path, and the true heading errors for each distance 
 
     \begin{figure}
         \centering
-        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{a.pdf}}
+        \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/full_control_loop.eps}}
         \caption{Control loop results}
         \label{fig:control_loop}
     \end{figure}
