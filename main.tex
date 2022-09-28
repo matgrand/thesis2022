@@ -72,7 +72,7 @@
     efficient and responsive way, while being very accurate. The heading error of the standard pure
     pursuit controller is chosen as estimation target. A clothoid based centerline has been chosen
     as training path for its several advantages in the analyzed scenario. Different performance
-    metrics are evaluated and the standard devistion of the error is found to be the more effective. An
+    metrics are evaluated and the standard deviation of the error is found to be the more effective. An
     analysis on the hyperparameters (image dimension, lookahead distance,
     training variability, and others) is performed in order to find the best combinations and
     evaluate the impact of each parameter. From the results in a real world scenario a very small
@@ -99,7 +99,36 @@
 
 \section{Introduction}
 
-    Spiegazione della struttura della tesi e dei metodi utilizzati.
+    This thesis project is placed in the context of autonomous driving and, more specifically, it
+    addresses the problem of lane detection and tracking. The methods and the development are
+    tailored for the specific application of the Bosch Future Mobility Challenge (BFMC), an
+    internation autonomous driving competition for 1:10 scaled vehicles, in which we competed and
+    won as the DEI-University of Padova team. 
+
+    The main objective of this thesis is to develop a local estimation system, capable of running on
+    an embedded device (a Raspberry Pi 4), that, together with an appropriate controller, is capable
+    of keeping the autonomous vehicle in the lane, and tracking the center line. 
+
+    We will start by analyzing the context: from the vehicle model and controller, to the simulation environment we
+    could use to test the algorithms, to the discussion about the optimal path to follow and performance
+    metrics used to evaluate the estimation accuracy. 
+
+    We will then propose a semi-original estimation method, which is based on the use of a neural
+    network trained exclusively in the virtual environment. The network is fed with images from a
+    camera mounted on the vehicle and outputs an estimate of the heading error of the vehicle w.r.t.
+    the centerline, which is the estimation target. 
+
+    The proposed estimation method will be extensively tested in a real-world scenario and an
+    analysis on the most important hyperparameters will be performed, with respect to the estimation
+    capabilities and performance.
+
+    Finally, the whole estimation and controller scheme will be tested in a standard control loop
+    application in a real-world scenario to evaluate the tracking performance. 
+
+
+
+
+
     \newpage
 
 
