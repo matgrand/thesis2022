@@ -86,55 +86,71 @@
 \tableofcontents
 \newpage
 
-\section{Listing of figures}
-
-    \newpage
-
-
-\section{Acknowledgments}
-
-    Thank you thank you thank you thank you very much
-    \newpage
-
-
 \section{Introduction}
 
     This thesis project is placed in the context of autonomous driving and, more specifically, it
-    addresses the problem of lane detection and tracking. The methods and the development are
+    addresses the problem of lane detection and keeping. The methods and the implementation are
     tailored for the specific application of the Bosch Future Mobility Challenge (BFMC), an
-    internation autonomous driving competition for 1:10 scaled vehicles, in which we competed and
+    international autonomous driving competition for 1:10 scaled vehicles, in which we competed and
     won as the DEI-University of Padova team. 
 
-    The main objective of this thesis is to develop a local estimation system, capable of running on
-    an embedded device (a Raspberry Pi 4), that, together with an appropriate controller, is capable
-    of keeping the autonomous vehicle in the lane, and tracking the center line. 
+    To this day, the autonomous driving problem is a very complex and mostly unsolved problem.  Several
+    strategies have been developed, both in the literature and by various companies, in order to
+    partially solve it. Lane detection and keeping is usually one of the most important building
+    blocks, since it's one of the most frequent task that an autonomous vehicle must handle. It
+    also has been tackled in many ways, although mainly using camera  (or multi-camera)
+    based strategies \citep*{1603550}. The most recent methods are mostly based on deep learning and
+    convolutional networks \citep*{7407673}.
+    These methods can perform very well even in challenging situations but are usually very
+    computationally intensive and require a big amount of training data from real-world driving
+    scenarios. 
+
+    For the purposes of the BFMC, we are interested in designing and implementing a lane detection
+    and keeping strategy that is able to perform well within the constraints of the competition;
+    namely it should be able to run on a Raspberry Pi 4, a low-end single-board computer, and use a
+    front-mounted camera. Moreover, it's important to notice that we are not able to access to competition
+    environment before the actual challenge, but we are given a simulated version of the competition
+    track where we can test our algorithms. 
+
+    To address our particular instance of the lane detection and keeping problem, we propose a
+    semi-original strategy which is based on a camera-based estimator and a controller working together. The
+    estimator is a convolutional neural network trained in the given simulation environment, that
+    has as estimation target the heading error of the vehicle with respect to the centerline. The
+    controller is a partially modified pursuit controller \citep*{purepursuit}, which uses the
+    estimated heading error as input. The controller is not object of this thesis, but have been
+    extensively tested and improved by the work of my colleague and friend, Antonio Gallina, in his thesis.
+
+    The main objective of this thesis is to develop a local camera-based and gps-denied estimation strategy, capable of running on
+    the embedded device that, together with the appropriate controller, is capable
+    of keeping the autonomous vehicle in the lane, and possibly tracking the center line. 
 
     We will start by analyzing the context: from the vehicle model and controller, to the simulation environment we
     could use to test the algorithms, to the discussion about the optimal path to follow and performance
-    metrics used to evaluate the estimation accuracy. 
+    metrics used to evaluate the estimation accuracy. We will settle on a clothoid-based centerline
+    interpolation for its several advantages and with the standard deviation as the performance
+    metric of choice for its simplicity and effectiveness in our particular scenario.
 
-    We will then propose a semi-original estimation method, which is based on the use of a neural
-    network trained exclusively in the virtual environment. The network is fed with images from a
-    camera mounted on the vehicle and outputs an estimate of the heading error of the vehicle w.r.t.
-    the centerline, which is the estimation target. 
+    We will then discuss the proposed estimation method, explaining the data collection process in
+    the simulator, the dataset generation and the training process in details, explaining the
+    various parameters used and the reasons behind them. 
 
-    The proposed estimation method will be extensively tested in a real-world scenario and an
+    In order to understand the importance of the various parameters, 
+    the proposed estimation method will be extensively tested in a real-world scenario and an
     analysis on the most important hyperparameters will be performed, with respect to the estimation
-    capabilities and performance.
+    capabilities and performance. We will discover how the learning parameters like the number of
+    epochs and learning rate will play a major role, but once those are fixed, the amount of
+    steering noise in the training datasets and the distance ahead of the heading error also become
+    important. 
 
     Finally, the whole estimation and controller scheme will be tested in a standard control loop
-    application in a real-world scenario to evaluate the tracking performance. 
-
-
-
-
+    application in a real-world scenario to evaluate the tracking performance. The strategy will perform
+    well in both the analyzed scenarios, achieving perfect tracking at low speed and keeping the
+    lane even at high speed.
 
     \newpage
 
 
-\section{Context Analysis}
-
-\subsection{Problem Statement}
+\section{Problem Statement}
     %Spiegazione del contesto della tesi e dei problemi che si vogliono risolvere.
     This thesis project is placed in the context of autonomous vehicles and
     autonomous driving: more specifically we want to target the problem of lane
@@ -243,7 +259,7 @@
     road and vision occlusions\cite{coulter1992implementation}.
 
     The heading error (HE, $\alpha$) is the key parameter to be estimated, as it is the
-    starting point of the PP control strategy\citep{7796574,9368694}.
+    starting point of the PP control strategy\citep{7796574,purepursuit}.
     The HE is defined as the angle between the vehicle heading direction and the
     line that connects the lookahead point and the center of rear axle of the
     vehicle. The lookahead point is defined as the point on the path on a fixed (or
@@ -277,7 +293,7 @@
     orientation of the vehicle in the global frame of reference; therefore it
     can be used only in a simulated environment. This is indeed the algorithm
     used to generate the training datasets. The algorithm implementation is a little more delicate
-    and explained in detail in section \ref{sec:data_collection}.
+    and explained in detail in chapter \ref{sec:data_collection}.
 
     \begin{figure}
         \centering
@@ -314,7 +330,14 @@
     \end{figure}
     
 
-    \subsection{Simulation environment}
+\subsection{Real track and simulation environment}
+    The real track where we competed on, is a scaled down version of a city, with a variety of
+    different roads, intersections, roundabouts, traffic lights, traffic signs, crosswalks, other
+    vehicles and pedestrians. The track is roughly a square of 15 meters per side. Unfortunately we
+    could not access the real track in the development phase, so we had to rely on the given
+    simulated version of the track. A picture of the real track and the simulated one are shown in
+    Figure \ref*{fig:simulator_real_track}.
+
     The simulation environment is a key component of the estimation process, it
     is not directly related to the online estimation itself, but it is used to
     generate the training datasets; the accuracy of the estimation is therefore
@@ -353,10 +376,18 @@
     
 
     \begin{figure}
-        \centering
-        \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{imgs/gazebo_img.png}}
-        \caption{ Simulator image }
-        \label{fig:simulator}
+        \begin{subfigure}[c]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{imgs/gazebo_img.png}}
+            \caption{ Real track }
+        \end{subfigure}
+        \begin{subfigure}[c]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{imgs/gazebo_img.png}}
+            \caption{ Simulator image }
+        \end{subfigure}
+        \caption{Real track and simulator image}
+        \label{fig:simulator_real_track}
     \end{figure}
 
 \clearpage
@@ -571,7 +602,7 @@
     standard deviation (STD) of the errors. The main issue with this approach is how to retrieve the ground
     truth. In the simulated environment it is very easy since we have access to the precise absolute position
     and orientation of the car. In the real case it is more challenging, but with the experimental
-    setup we used, explained in section \ref*{sec:exp_setup} we were able to retrieve a precise
+    setup we used, explained in chapter \ref*{sec:exp_setup} we were able to retrieve a precise
     position and orientation, therefore we have an accurate ground truth that can be used to
     evaluate the estimation performance and to compare different methods. In addition to the STD,
     the mean absolute error can also be considered with the same rationale, which is less dependent
@@ -610,7 +641,7 @@
     %     -some evaluate the whole system estimation+Controller
     %     -accuracy of lane markings wrt ground truth
     %     -variance of polynomial coefficients that define lanes
-    % -The ones explained in section 5 of 'Video-based lane estimation and tracking for driver
+    % -The ones explained in chapter 5 of 'Video-based lane estimation and tracking for driver
     % assistance: survey, system, and evaluation' \url{https://ieeexplore.ieee.org/document/1603550}
     %     -they used mean absolute error in position, standard deviation of error in position, standard
     %     deviation of error in rate of change of lateral position
@@ -704,7 +735,7 @@ The main steps of the original method are the following:
     \item While the vehicle is travelling along the path, Gaussian noise is injected into the
     steering in order for the car to slide left and right. This is done in order to generate more
     variety in the training dataset. The noise injection is a key aspect of the estimation method
-    and has a big impact on the final performance, as it will be discussed in section
+    and has a big impact on the final performance, as it will be discussed in chapter
     \ref*{sec:results}. The idea is that if the camera only sees the road ahead always perfectly
     centered, later, after the training, when facing the road at a different position and
     orientation, slightly off center, the network will not be able to estimate the heading error for
@@ -737,7 +768,7 @@ the images. To achieve this, we apported a series of modifications:
     \item To disconnect the heading error calculation from the image generation, the images are
     saved alongside the respective car position and orientation, and the heading error can be
     calculated offline for any distance using the more accurate method described in the following
-    section.   
+    chapter.   
 \end{itemize}
 
 
@@ -769,7 +800,7 @@ the images. To achieve this, we apported a series of modifications:
 \subsubsection*{Heading error calculation}
     In order to precisely calculate the heading error an algorithm has been developed that is a
     direct implementation of the common heading error definition in the PP controller
-    \citep*{9368694}. The algorithm works by first finding the (normally 2) points at the distance
+    \citep*{purepursuit}. The algorithm works by first finding the (normally 2) points at the distance
     $d_{ahead}$ required, and then selecting the one that is coherent with the car orientation. The
     algorithm is robust with respect to the 2 possible edge cases of finding a single point or no
     point at all, which means the vehicle is too far from the path and the algorithm returns the
@@ -837,7 +868,7 @@ the images. To achieve this, we apported a series of modifications:
         is the fact that the top section of the image contains the sky and the horizon and the very
         far away section of the road, which does not contain any relevant information. The
         percentage of the image kept is a hyperparameter that can be tuned. The influence of this
-        parameter will be discussed in the Results section (\ref*{sec:results}).
+        parameter will be discussed in the Results chapter (\ref*{sec:results}).
         \item \textbf{First resize}: the images are resized to double the final size. In this case
         to a square of 64x64 pixels. This is done to reduce the computational cost of the algorithm
         and to preserve only the most predominant features of the image. The reason for the square
@@ -1055,7 +1086,7 @@ the images. To achieve this, we apported a series of modifications:
 \pagebreak
 
 \section{Results} \label{sec:results}
-    In this section the results of the estimation system will be presented. The following are the
+    In this chapter the results of the estimation system will be presented. The following are the
     main topics that will be covered:
     \begin{itemize}
         \item \textbf{Experimental setup}: the vehicle assembly, the real track and the localization
@@ -1217,7 +1248,8 @@ by means of the simulated environment but by means of the Vicon system. Another 
 since unfortunately we are not able to teleport the vehicle in the real world, we had to use the
 original method of generating the dataset, as explained in Section \ref{sec:data_collection}. The
 datasets have been generated using 8 different noise level in the steering: $0, 2, 4, 6, 8, 10, 12,
-14$ degrees. For each noise level the car performed 4 laps around the track clockwise, and 4 laps
+14$ degrees, the reason behind this choice is evaluating the car performance in suboptimal testing
+scenarios.  For each noise level the car performed 4 laps around the track clockwise, and 4 laps
 anticlockwise. The speed of the car was kept constant at $0.3\,\si{\meter\per\second}$. 
 
 The heading errors have been computed offline using the technique explained in Section
@@ -1225,6 +1257,10 @@ The heading errors have been computed offline using the technique explained in S
 0.4, 0.5, 0.6, 0.7, 0.8, 0.9$ meters.
 Figures \ref{fig:dataset_analysis1} and \ref{fig:dataset_analysis2} show respectively the actual path followed by
 the car against a reference path, and the true heading errors for each distance ahead.  %
+For each real evaluation dataset generated, the sequence of the vehicle positions and orientations
+has been logged and used to generate a the equivalent evalution dataset in the simulation
+environment. This has been done with the intent of evaluating the generalization capabilities of the
+proposed strategy when applied to the real world. 
 
 \begin{figure}
     \centering
@@ -1324,7 +1360,7 @@ the car against a reference path, and the true heading errors for each distance 
 \begin{figure}
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/conv_act.png}}
-    \caption{Activations of the convolutional layers for stright heading error}
+    \caption{Activations of the convolutional layers for straight heading error}
     \label{fig:conv_activations}
 \end{figure}
 
@@ -1349,7 +1385,7 @@ the car against a reference path, and the true heading errors for each distance 
     \subsubsection*{Methodology}
     For each group of parameters, a set of values for each parameter is chosen. Then, for each
     combination, the whole training process, as explained in Section \ref{sec:nn_training}, is
-    performed. The combination is evaluated on 3 sets of real datasets: a clean group of datasets,
+    performed. The combination is evaluated on 3 sets of real datasets and their simulated versions: a clean group of datasets,
     with a steering noise $\sigma_s \leq 4$ deg, a very noisy group of datasets, with $\sigma_s \geq
     10$ deg, and finally on the set of all the datasets. The performance is evaluated calculating
     the standard deviation of the error between the network estimate and the ground truth, for each
@@ -1377,7 +1413,26 @@ the car against a reference path, and the true heading errors for each distance 
     low learning rate. Figure \ref{fig:3d_lr_epochs} shows the STD for the different values of
     learning rate and number of epochs. As we can see, the STD is very low at around $\num{200}$
     epochs.
+
+    From the generalization point of view, it's possible to see how the STDs in simulation and in the
+    real case are very similar; meaning that the network is able to generalize well to the real
+    world, but also that it would have been possible to find the best learning parameters by means
+    of simulation only. 
     
+    \begin{figure}
+        \centering
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_lr.eps}}
+        \end{subfigure}
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_epochs.eps}}
+        \end{subfigure}
+        \caption{STD for different learning parameters (2)}
+        \label{fig:learning_params2}
+    \end{figure}
+
     \begin{figure}
         \centering
         \begin{subfigure}[b]{\textwidth}
@@ -1392,19 +1447,6 @@ the car against a reference path, and the true heading errors for each distance 
         \label{fig:learning_params1}
     \end{figure}
 
-    \begin{figure}
-        \centering
-        \begin{subfigure}[b]{\textwidth}
-            \centering
-            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_lr.eps}}
-        \end{subfigure}
-        \begin{subfigure}[b]{\textwidth}
-            \centering
-            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_epochs.eps}}
-        \end{subfigure}
-        \caption{STD for different learning parameters (2)}
-        \label{fig:learning_params2}
-    \end{figure}
 
     \begin{figure}
         \centering
@@ -1430,6 +1472,13 @@ the car against a reference path, and the true heading errors for each distance 
     distance is calculated. Figure \ref{fig:3d_noise_dist} shows the STD for different values of the
     2 parameters. The STD follows a nice convex shape, with a minimum for the aforementioned values. 
 
+    From the generalization point of view, we can see that also in this case the STDs in simulation
+    and real world are very similar. Confirming the generalization capabilities of the network. The
+    network performs slightly better in the simulated environment for high steer noise, and the
+    minimum STD for the heading error distance is actually slightly lower in simulation, a possible
+    explanation for this behavior is that there might be a slight misalignment of the camera on the
+    real car, that becomes relevant for very close distances.
+
     \begin{figure}
         \centering
         \begin{subfigure}[b]{\textwidth}
@@ -1454,10 +1503,16 @@ the car against a reference path, and the true heading errors for each distance 
 \clearpage
 
 \subsubsection*{Preprocessing parameters}
-    The preprocessing parameters are the ones that have the least impact on the performance between
-    the one analyzed, but together they can have a significant impact. The most important one is the
-    Canny edge detection, which improves the performance by 30\% on average. 
-    Figure \ref{fig:preprocessing_params} shows the STD for the other parameters. 
+    Figures \ref{fig:preprocessing_params1} and \ref*{fig:preprocessing_params2} shows the STDs for
+    the preprocessing parameters.
+    These parameters are the ones that have the least impact on the performance between
+    the one analyzed, but that play a major role for the generalization capabilities of the
+    strategy. In fact, if we look at the difference between the application of Canny edge detection
+    and blur we see that in simulation we have better performance when the image is left intact,
+    while in the real world the opposite is true. A possible explanation for this is the fact that
+    Canny removes all the brightness information from the image, and blurring helps in making the
+    images from the simulator and the real ones almost identical. The effect can be seen in Figure \ref*{fig:preprocessing_steps}.
+    
     The blur kernel size has a minimum at around $\num{3}$. The network performs better with low
     image noise, with a minimum at around $40 / 255$. The percentage of the image cut has very
     little influence on the performance, however, looking at Figure
@@ -1474,13 +1529,25 @@ the car against a reference path, and the true heading errors for each distance 
             \centering
             \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_blur.eps}}
         \end{subfigure}
+        \caption{STD for different preprocessing parameters(1)}
+        \label{fig:preprocessing_params1}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \begin{subfigure}[b]{\textwidth}
+            \centering
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_canny1.eps}}
+        \end{subfigure}
         \begin{subfigure}[b]{\textwidth}
             \centering
             \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/STD_plot_keep_bottom.eps}}
         \end{subfigure}
-        \caption{STD for different preprocessing parameters}
-        \label{fig:preprocessing_params}
+        \caption{STD for different preprocessing parameters(2), note that Canny has only 2 values: 0 meaning it is not applied and 100 meaning it is applied}
+        \label{fig:preprocessing_params2}
     \end{figure}
+
+        %TODO make canny and blur singular values, not together
 
     \begin{figure}
         \centering
@@ -1556,7 +1623,7 @@ consider adding full derivation of the bicycle model \url{https://www.youtube.co
 add the python version of the previously described algorithm.
 
 consider adding derivation of the PP
-\url{https://ieeexplore.ieee.org/document/9368694}
+\url{https://ieeexplore.ieee.org/document/purepursuit}
 
 
 \newpage
@@ -1587,7 +1654,7 @@ consider adding derivation of the PP
         pages={812-818},
         doi={10.1109/IVS.2017.7995816}
     }
-    @INPROCEEDINGS{9368694,
+    @INPROCEEDINGS{purepursuit,
         author={Huang, Yaofu and Tian, Zengshan and Jiang, Qing and Xu, Junxing},
         booktitle={2020 IEEE 2nd International Conference on Civil Aviation Safety and Information Technology (ICCASIT}, 
         title={Path Tracking Based on Improved Pure Pursuit Model and PID}, 
@@ -1595,7 +1662,7 @@ consider adding derivation of the PP
         volume={},
         number={},
         pages={359-364},
-        doi={10.1109/ICCASIT50869.2020.9368694}
+        doi={10.1109/ICCASIT50869.2020.purepursuit}
     }
     %ros
     @inproceedings{quigley2009ros,
@@ -1978,6 +2045,12 @@ consider adding derivation of the PP
         howpublished = {\url{https://github.com/utkuozbulak/pytorch-cnn-visualizations}},
         commit = {b7e60adaf64c9be97b480509285718603d1e9ba4}
     }
+    % deep learning autonomous driving
+    @ARTICLE{7407673,  author={Li, Jun and Mei, Xue and Prokhorov, Danil and Tao, Dacheng},
+        journal={IEEE Transactions on Neural Networks and Learning Systems},   title={Deep Neural
+        Network for Structural Prediction and Lane Detection in Traffic Scene},   year={2017},
+        volume={28},  number={3},  pages={690-703},  doi={10.1109/TNNLS.2016.2522428}
+    } 
       
 
 
