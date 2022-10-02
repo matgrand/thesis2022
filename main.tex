@@ -324,7 +324,7 @@
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.6\linewidth]{a.pdf}
+        \includegraphics[width=0.6\linewidth]{imgs/example_img.png}
         \caption{Example image from the camera}
         \label{fig:camera_example}
     \end{figure}
@@ -336,7 +336,7 @@
     vehicles and pedestrians. The track is roughly a square of 15 meters per side. Unfortunately we
     could not access the real track in the development phase, so we had to rely on the given
     simulated version of the track. A picture of the real track and the simulated one are shown in
-    Figure \ref*{fig:simulator_real_track}.
+    Figure \ref{fig:simulator_real_track}.
 
     The simulation environment is a key component of the estimation process, it
     is not directly related to the online estimation itself, but it is used to
@@ -378,15 +378,13 @@
     \begin{figure}
         \begin{subfigure}[c]{\textwidth}
             \centering
-            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{imgs/gazebo_img.png}}
-            \caption{ Real track }
+            \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{imgs/bfmc_track.png}}
         \end{subfigure}
         \begin{subfigure}[c]{\textwidth}
             \centering
             \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{imgs/gazebo_img.png}}
-            \caption{ Simulator image }
         \end{subfigure}
-        \caption{Real track and simulator image}
+        \caption{Real track section and simulator image}
         \label{fig:simulator_real_track}
     \end{figure}
 
@@ -511,7 +509,7 @@
     starting point}; to do this we use the Dijkstra algorithm \citep*{dijkstra1959note}. 
     
     The second and last step to create the \textit{optimal} path is to fit clothoid segments between the
-    waypoints of the shortest path. Since the Fresnel integrals in equation (\ref*{eq:clothoid}) are two transcendental functions,
+    waypoints of the shortest path. Since the Fresnel integrals in equation (\ref{eq:clothoid}) are two transcendental functions,
     they can't be solved analytically, however there are several approximation
     methods in the literature that achieves good results \citep*{6646277,7962257,4543548}. In our
     implementation we used the python library \textit{pyclothoids} \citep*{pyclothoids}, which is a python
@@ -602,7 +600,7 @@
     standard deviation (STD) of the errors. The main issue with this approach is how to retrieve the ground
     truth. In the simulated environment it is very easy since we have access to the precise absolute position
     and orientation of the car. In the real case it is more challenging, but with the experimental
-    setup we used, explained in chapter \ref*{sec:exp_setup} we were able to retrieve a precise
+    setup we used, explained in chapter \ref{sec:exp_setup} we were able to retrieve a precise
     position and orientation, therefore we have an accurate ground truth that can be used to
     evaluate the estimation performance and to compare different methods. In addition to the STD,
     the mean absolute error can also be considered with the same rationale, which is less dependent
@@ -736,7 +734,7 @@ The main steps of the original method are the following:
     steering in order for the car to slide left and right. This is done in order to generate more
     variety in the training dataset. The noise injection is a key aspect of the estimation method
     and has a big impact on the final performance, as it will be discussed in chapter
-    \ref*{sec:results}. The idea is that if the camera only sees the road ahead always perfectly
+    \ref{sec:results}. The idea is that if the camera only sees the road ahead always perfectly
     centered, later, after the training, when facing the road at a different position and
     orientation, slightly off center, the network will not be able to estimate the heading error for
     lack of examples in the training dataset. The amount and characterization of the noise injected
@@ -752,15 +750,15 @@ the dataset has been generated.
 
 \subsubsection*{New method}
 The new data collection method is designed to solve the previous method main issues: reducing the
-code complexity, fine controlling the noise injected and generate the heading error independently of
+code complexity, fine controlling the noise injected and generating the heading error independently of
 the images. To achieve this, we apported a series of modifications:
 \begin{itemize}
     \item The entire interface with the simulated car is removed, the vehicle is moved around the
     simulated environment by teleporting it to the new desired position an orientation using a
     \textit{ROS} service. In this way we are able to directly control the variance of the noise both
     in the car orientation and lateral position with respect to the lane center by sampling from 2
-    Gaussian distributions; the change effect can be seen in image \ref*{fig:original_vs_old}. In
-    this way we don't  need a controller anymore.
+    Gaussian distributions; the change effect can be seen in image \ref{fig:original_vs_old}. In
+    this way we remove any bias that could be introduced by the PP controller. 
     \item The map and the path are simplified to a single loop designed to match the real track we
     built in the university's laboratory for the real-life tests. This allows to isolate only the
     lane detection problem, and it's a practical test bed for performing systematic tests and
@@ -768,7 +766,7 @@ the images. To achieve this, we apported a series of modifications:
     \item To disconnect the heading error calculation from the image generation, the images are
     saved alongside the respective car position and orientation, and the heading error can be
     calculated offline for any distance using the more accurate method described in the following
-    chapter.   
+    section.   
 \end{itemize}
 
 
@@ -806,8 +804,8 @@ the images. To achieve this, we apported a series of modifications:
     point at all, which means the vehicle is too far from the path and the algorithm returns the
     closest point; or the one where there are $\geq 2$ points at the same distance, in this case the
     algorithm returns the further in the path. The algorithm is implemented in python and a
-    pseudocode for it can be seen in Algorithm \ref*{alg:heading_error_calculation}. A graphical
-    intuition of the algorithm can be seen in Figure \ref*{fig:heading_error_calculation}. 
+    pseudocode for it can be seen in Algorithm \ref{alg:heading_error_calculation}. A graphical
+    intuition of the algorithm can be seen in Figure \ref{fig:heading_error_calculation}. 
     
     \begin{algorithm}
         \caption{Calculate Heading Error}\label{alg:heading_error_calculation}
@@ -868,7 +866,7 @@ the images. To achieve this, we apported a series of modifications:
         is the fact that the top section of the image contains the sky and the horizon and the very
         far away section of the road, which does not contain any relevant information. The
         percentage of the image kept is a hyperparameter that can be tuned. The influence of this
-        parameter will be discussed in the Results chapter (\ref*{sec:results}).
+        parameter will be discussed in the Results chapter (\ref{sec:results}).
         \item \textbf{First resize}: the images are resized to double the final size. In this case
         to a square of 64x64 pixels. This is done to reduce the computational cost of the algorithm
         and to preserve only the most predominant features of the image. The reason for the square
@@ -1116,7 +1114,14 @@ the images. To achieve this, we apported a series of modifications:
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.6\linewidth]{a.pdf}
+        \begin{subfigure}[c]{\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{imgs/vehicle_assembly2.png}
+        \end{subfigure}
+        \begin{subfigure}[c]{\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{imgs/chassis.jpg}
+        \end{subfigure}
         \caption{Scaled vehicle assembly}
         \label{fig:vehicle_assembly}
     \end{figure}
@@ -1205,7 +1210,7 @@ the images. To achieve this, we apported a series of modifications:
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.6\linewidth]{a.pdf}
+        \includegraphics[width=\linewidth]{imgs/sparcs_track.jpeg}
         \caption{Test track}
         \label{fig:track}
     \end{figure}
@@ -1503,7 +1508,7 @@ proposed strategy when applied to the real world.
 \clearpage
 
 \subsubsection*{Preprocessing parameters}
-    Figures \ref{fig:preprocessing_params1} and \ref*{fig:preprocessing_params2} shows the STDs for
+    Figures \ref{fig:preprocessing_params1} and \ref{fig:preprocessing_params2} shows the STDs for
     the preprocessing parameters.
     These parameters are the ones that have the least impact on the performance between
     the one analyzed, but that play a major role for the generalization capabilities of the
@@ -1511,13 +1516,13 @@ proposed strategy when applied to the real world.
     and blur we see that in simulation we have better performance when the image is left intact,
     while in the real world the opposite is true. A possible explanation for this is the fact that
     Canny removes all the brightness information from the image, and blurring helps in making the
-    images from the simulator and the real ones almost identical. The effect can be seen in Figure \ref*{fig:preprocessing_steps}.
+    images from the simulator and the real ones almost identical. The effect can be seen in Figure \ref{fig:preprocessing_steps}.
     
     The blur kernel size has a minimum at around $\num{3}$. The network performs better with low
     image noise, with a minimum at around $40 / 255$. The percentage of the image cut has very
     little influence on the performance, however, looking at Figure
     \ref{fig:3d_keep_bottom_he_dist}, we can see that for estimating heading errors at further
-    distances it's better to use a larger percentage of the image.
+    distances it is better to use a larger percentage of the image.
 
     \begin{figure}
         \centering
