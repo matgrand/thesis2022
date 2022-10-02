@@ -120,12 +120,12 @@
     estimated heading error as input. The controller is not object of this thesis, but have been
     extensively tested and improved by the work of my colleague and friend, Antonio Gallina, in his thesis.
 
-    The main objective of this thesis is to develop a local camera-based and gps-denied estimation strategy, capable of running on
+    The main objective of this thesis is to develop a camera-based and gps-denied estimation strategy, capable of running on
     the embedded device that, together with the appropriate controller, is capable
     of keeping the autonomous vehicle in the lane, and possibly tracking the center line. 
 
-    We will start by analyzing the context: from the vehicle model and controller, to the simulation environment we
-    could use to test the algorithms, to the discussion about the optimal path to follow and performance
+    We will start by analyzing the context of the problem: from the vehicle model and controller, to the simulation environment we
+    used to test the algorithms, to the discussion about the optimal path to follow and performance
     metrics used to evaluate the estimation accuracy. We will settle on a clothoid-based centerline
     interpolation for its several advantages and with the standard deviation as the performance
     metric of choice for its simplicity and effectiveness in our particular scenario.
@@ -1611,10 +1611,60 @@ proposed strategy when applied to the real world.
 
 
 \newpage
-\section{Conclusion and Future Work}
-end
+\section{Conclusion}
+The goal of this master thesis is to design and implement an efficient and reliable camera-based and
+gps-denied estimation strategy for the heading error of a scaled vehicle. Keeping in mind the
+strategy has been developed for the BFMC, to be applied in an embedded device on a track we didn't have access to,  
+in this chapter we will briefly summarize the main results and discuss an outlook for future work.
 
 
+
+\subsection{Summary}
+The main concepts we dealt with in this thesis and their respective most important takeaways are the following:
+\begin{itemize}
+    \item \textbf{Heading error estimation}: the estimation strategy is centered around the heading
+    error, which is the key input for the PP controller. The concept of separating the perception of
+    the road ahead from the vehicle control showed to be very effective and allowed us to fine tune
+    the performance of the whole control scheme on the days of the competition without worrying
+    about the underlying estimation process.  
+    \item \textbf{Neural network estimation}: due to the fact that the vehicle is operating without
+    having access to a global positioning systems, and due to the non-existence of sensors capable
+    of locally measuring the heading error of the vehicle, the choice of using a vision-based
+    estimation strategy came very naturally. The idea of using a convolutional neural network followed
+    because of the high rate of success in similar problems of this architecture. During the
+    development we discovered that a very small and simple convolutional neural network is capable
+    of solving the estimation problem, and outperforms more complex architectures; with the added
+    benefit of being very computationally efficient. From the hyperparameters point of view we
+    confirmed the very well established importance of the learning rate and the number of epochs as
+    determinant factors for the final estimation performance.
+    \item \textbf{Training in simulation}: the idea of using the simulation environment to
+    generate the training datasets was driven by the fact that we could not access the real
+    competition track in the development phase. The rationale behind it was that if the strategy
+    works in simulation and in our recreated real life scenario, then there is a high probability
+    for it to be working in the real track. Generating the datasets in simulation has several
+    advantages, from being able to create unlimited amount of samples, to very precise control the
+    dataset generation process.  From the analysis we discovered the importance of both the
+    preprocessing applied to the images and the amount of variability in the training examples. The
+    preprocessing step is what allows to almost seamlessly translate from the simulation environment to
+    reality. The amount of variability in the training set is also a delicate parameter, and we
+    discovered how networks trained on datasets with many examples of the vehicle in unusual
+    positions and orientations perform better on average.
+    \item \textbf{Application in closed loop control scheme}: When testing the vehicle capabilities
+    in the test track in the university laboratory and at the competition track, the whole
+    estimation and control strategy worked very well and was able to keep the lane even at high speed.
+\end{itemize}
+
+
+\subsection{Future Work}
+The proposed strategy presents several opportunities for future work. The estimation could be
+extended from the single camera to a full 360 degrees view of the surroundings to improve the
+localization capabilities, or the estimation target could be extended from the heading error to a
+section of the centerline ahead, or some more road parameters could be estimated like, for example,
+the curvature ahead. The network architecture could be improved by considering sequences of frames
+rather than single frames, in order to add redundancy and time coherence. 
+
+Finally, the general concept of using machine learning to estimate control inputs could be applied
+in other control schemes where the input cannot be retrieved using standard methods.
 
 
 \newpage
