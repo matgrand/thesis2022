@@ -1,7 +1,7 @@
 \documentclass[a4paper,12pt,sort&compress]{article}
 \renewcommand{\baselinestretch}{1.5}
 \usepackage[utf8]{inputenc}
-\usepackage{graphicx,subcaption,siunitx,multirow,multicol,hyperref,geometry,amsmath,amssymb,tikz,circuitikz,gensymb,bigfoot,filecontents}
+\usepackage{graphicx,subcaption,siunitx,multirow,multicol,hyperref,geometry,amsmath,amssymb,tikz,circuitikz,gensymb,bigfoot,filecontents,listing}
 \usepackage[T1]{fontenc}
 \usepackage[numbered,framed]{matlab-prettifier}
 \usepackage{xurl}
@@ -1669,7 +1669,7 @@ extended from the single camera to a full 360 degrees view of the surroundings t
 localization capabilities, or the estimation target could be extended from the heading error to a
 section of the centerline ahead, or some more road parameters could be estimated like, for example,
 the curvature ahead. The network architecture could be improved by considering sequences of frames
-rather than single frames, in order to add redundancy and time coherence. 
+rather than single frames, in order to add redundancy and time coherence.  
 
 Finally, the general concept of using machine learning to estimate control inputs could be applied
 in other control schemes where the input cannot be retrieved using standard methods.
@@ -1677,16 +1677,126 @@ in other control schemes where the input cannot be retrieved using standard meth
 
 \newpage
 \section{Appendix}
-consider adding full derivation of the bicycle model \url{https://www.youtube.com/watch?v=HqNdBiej23I&ab_channel=Prof.GeorgSchildbach%2CUniversityofLuebeck}
-\url{https://thomasfermi.github.io/Algorithms-for-Automated-Driving/Control/BicycleModel.html}
-\url{http://code.eng.buffalo.edu/dat/sites/model/bicycle.html#:~:text=motion%20under%20the%20assumption%20of,hard%20braking%20and%20steering%20maneuvers.}
-\url{https://ieeexplore.ieee.org/document/9311987}
+\subsection{Additional convolutional layer activations}
+
+%strong left
+\begin{figure}[ht!]
+    \centering
+    \begin{subfigure}[c]{\textwidth}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{figures/or_img_strong_left.eps}}
+    \end{subfigure}
+    \begin{subfigure}[c]{\textwidth}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.9\linewidth]{figures/conv_activations_strong_left.eps}}
+    \end{subfigure}
+    \caption{Activations for strong left turn}
+\end{figure}
+
+%weak left
+\begin{figure}[ht!]
+    \centering
+    \begin{subfigure}[c]{\textwidth}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{figures/or_img_weak_left.eps}}
+    \end{subfigure}
+    \begin{subfigure}[c]{\textwidth}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.9\linewidth]{figures/conv_activations_weak_left.eps}}
+    \end{subfigure}
+    \caption{Activations for weak left turn}
+\end{figure}
+
+%straight
+\begin{figure}[ht!]
+    \centering
+    \begin{subfigure}[c]{\textwidth}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{figures/or_img_straight.eps}}
+    \end{subfigure}
+    \begin{subfigure}[c]{\textwidth}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.9\linewidth]{figures/conv_activations_straight.eps}}
+    \end{subfigure}
+    \caption{Activations for straight}
+\end{figure}
+
+%weak right
+\begin{figure}[ht!]
+    \centering
+    \begin{subfigure}[c]{\textwidth}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{figures/or_img_weak_right.eps}}
+    \end{subfigure}
+    \begin{subfigure}[c]{\textwidth}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.9\linewidth]{figures/conv_activations_weak_right.eps}}
+    \end{subfigure}
+    \caption{Activations for weak right turn}
+\end{figure}
+
+%strong right
+\begin{figure}[ht!]
+    \centering
+    \begin{subfigure}[c]{\textwidth}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{figures/or_img_strong_right.eps}}
+    \end{subfigure}
+    \begin{subfigure}[c]{\textwidth}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=0.9\linewidth]{figures/conv_activations_strong_right.eps}}
+    \end{subfigure}
+    \caption{Activations for strong right turn}
+\end{figure}
+
+
+
+
+\clearpage
 
 \subsection{Python implementation of heading error calculation}
-add the python version of the previously described algorithm.
 
-consider adding derivation of the PP
-\url{https://ieeexplore.ieee.org/document/purepursuit}
+\begin{lstlisting}[language=Python]
+import numpy as np
+def get_heading_error(x,y,yaw,path,dist_ahead, tolerance=0.01):
+    p = np.array([x,y]).T #current position of the car
+    min_index = np.argmin(np.linalg.norm( path-p,axis=1)) #index of clostest point on path
+    #roll path
+    path = np.roll(path, -min_index, axis=0)
+    p_min = path[0]
+    #rotate p_min to car frame
+    p_min_car = np.array([p_min[0]-x, p_min[1]-y])
+    p_min_car = p_min_car @ np.array([[np.cos(yaw), -np.sin(yaw)], [np.sin(yaw), np.cos(yaw)]])
+    dist = p_min_car[0] #signed distance to closest point on path, approx
+    #calculate point ahead
+    k = dist_ahead / 10.0 + 0.01
+    path_ahead = path[0:int(path.shape[0]*k)]
+    path_behind = path[int(path.shape[0]*(1-k)):]
+    dists_a = np.abs(np.linalg.norm(path_ahead-p,axis=1) - dist_ahead) #distances to all points on path
+    dists_b = np.abs(np.linalg.norm(path_behind-p,axis=1) - dist_ahead) #distances to all points on path
+    closest_a = np.argmin(dists_a) #index of closest point on path
+    closest_b = np.argmin(dists_b) #index of closest point on path
+    min_dist_a = dists_a[closest_a] #distance to closest point on path
+    min_dist_b = dists_b[closest_b] #distance to closest point on path
+    if min_dist_a > tolerance or min_dist_b > tolerance: # too far from the path
+        pHE = path_ahead[closest_a] #point ahead = closest point on path
+    else:
+        pa = path_ahead[np.max(np.where(dists_a < tolerance))] 
+        pb = path_behind[np.max(np.where(dists_b < tolerance))]
+        #calculate the point going dist ahead from the car in the car yaw direction
+        pp = p + dist_ahead*np.array([np.cos(yaw), np.sin(yaw)])
+        #choose between pa and pb
+        if np.linalg.norm(pp-pa) < np.linalg.norm(pp-pb):
+            pHE = pa
+        else:
+            pHE = pb
+    #calculate heading error
+    yaw_ref = np.arctan2(pHE[1]-p[1],pHE[0]-p[0]) #yaw reference in world frame
+    he = diff_angle(yaw_ref, yaw) #heading error
+    return he
+
+\end{lstlisting}
+
 
 
 \newpage
