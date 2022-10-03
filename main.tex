@@ -1584,9 +1584,9 @@ proposed strategy when applied to the real world.
         slightly decrease the speed in sharp turns. 
     \end{itemize}
 
-    The results of the two tests are shown in Figure \ref{fig:control_loop}. The first test shows
-    how the network, together with the PP controller, is able to keep the vehicle on the road and
-    perfectly tracking the centerline. 
+    The results of the two tests are shown in Figures \ref{fig:control_loop_low} and 
+    \ref{fig:control_loop_high}.  The first test shows how the network, together with the PP
+    controller, is able to keep the vehicle on the road and perfectly tracking the centerline. 
 
     In the second test the vehicle is able to remain inside the lane, even at high speed. The
     tracking is not perfect since the whole control scheme is limited by the maximum steering rate
@@ -1597,9 +1597,16 @@ proposed strategy when applied to the real world.
 
     \begin{figure}
         \centering
-        \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/full_control_loop.eps}}
-        \caption{Control loop results}
-        \label{fig:control_loop}
+        \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/low_speed_test.eps}}
+        \caption{Control loop results: low speed test}
+        \label{fig:control_loop_low}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/high_speed_test.eps}}
+        \caption{Control loop results: high speed test}
+        \label{fig:control_loop_high}
     \end{figure}
 
 
