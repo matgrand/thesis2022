@@ -982,17 +982,8 @@ the images. To achieve this, we apported a series of modifications:
     \end{itemize}  
 
     The network takes as input a 32x32 grayscale image and outputs a single value representing the heading
-    error. 
+    error. The pytorch implementation can be found in the appendix.
 
-    The network architecture is shown in Figure \ref{fig:network_architecture}. The pytorch
-    implementation can be found in the appendix.
-
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.6\linewidth]{a.pdf}
-        \caption{Network architecture}
-        \label{fig:network_architecture}
-    \end{figure}
 
 \subsubsection*{Training}
     In this section the training process will be described in detail. The main steps are the
@@ -1332,8 +1323,8 @@ proposed strategy when applied to the real world.
     layers. It is also possible to see how the pooling layers are reducing the dimensionality of the
     image and how the features becomes more and more abstract, with fewer and fewer pixels. The
     activations of the convolutional layers for the other images are shown in the appendix.
-
-
+ 
+ 
  \begin{figure}
     \centering
     \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{figures/conv_ker12.jpg}}
@@ -1343,14 +1334,22 @@ proposed strategy when applied to the real world.
 
 \begin{figure}
     \centering
-    \makebox[\textwidth][c]{\includegraphics[width=0.6\linewidth]{figures/best_conv.jpg}}
+    \begin{subfigure}[c]{\textwidth}
+        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{figures/1st_conv_optimal.eps}}
+    \end{subfigure}
+    \begin{subfigure}[c]{\textwidth}
+        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{figures/2nd_conv_optimal.eps}}
+    \end{subfigure}
+    \begin{subfigure}[c]{\textwidth}
+        \makebox[\textwidth][c]{\includegraphics[width=0.8\linewidth]{figures/3rd_conv_optimal.eps}}
+    \end{subfigure}
     \caption{Convolutional kernels optimal input}
     \label{fig:conv_kernels_best}
 \end{figure}
 
 \begin{figure}
     \centering
-    \makebox[\textwidth][c]{\includegraphics[width=1.1\linewidth]{figures/turns.png}}
+    \makebox[\textwidth][c]{\includegraphics[width=0.9\linewidth]{figures/turns.eps}}
     \caption{Turns}
     \label{fig:turns}
 \end{figure}
@@ -1512,11 +1511,13 @@ proposed strategy when applied to the real world.
     the preprocessing parameters.
     These parameters are the ones that have the least impact on the performance between
     the one analyzed, but that play a major role for the generalization capabilities of the
-    strategy. In fact, if we look at the difference between the application of Canny edge detection
-    and blur we see that in simulation we have better performance when the image is left intact,
+    strategy. In fact, if we look at the difference between the application and the non-application of Canny edge detection
+    we see that in simulation we have better performance when the image is left intact,
     while in the real world the opposite is true. A possible explanation for this is the fact that
-    Canny removes all the brightness information from the image, and blurring helps in making the
-    images from the simulator and the real ones almost identical. The effect can be seen in Figure \ref{fig:preprocessing_steps}.
+    Canny removes all the brightness information from the image, leaving only the strong edges, and
+    this appears to make images from simulation and real life very similar, avoiding overfitting on
+    training data.
+    The effect could already be predicted by looking at Figure \ref{fig:preprocessing_steps}.
     
     The blur kernel size has a minimum at around $\num{3}$. The network performs better with low
     image noise, with a minimum at around $40 / 255$. The percentage of the image cut has very
@@ -1602,7 +1603,7 @@ proposed strategy when applied to the real world.
     \end{figure}
 
 
-
+ 
 % -aggiungere il control loop
 %valutare qualche test di tracking in simulazione 
 
