@@ -94,8 +94,11 @@
     international autonomous driving competition for 1:10 scaled vehicles, in which we competed and
     won as the DEI-University of Padova team. 
 
-    To this day, the autonomous driving problem is a very complex and mostly unsolved problem.  Several
-    strategies have been developed, both in the literature and by various companies, in order to
+    To this day, the autonomous driving problem is a very complex problem, since it requires several
+    components to work together, from a robust perception system, to an advanced path
+    planner and controller capable of dealing with the uncertainties of the environment and the
+    unpredictability of the other drivers.
+    Several strategies have been developed, both in the literature and by various companies, in order to
     partially solve it. Lane detection and keeping is usually one of the most important building
     blocks, since it's one of the most frequent task that an autonomous vehicle must handle. It
     also has been tackled in many ways, although mainly using camera  (or multi-camera)
@@ -113,37 +116,39 @@
     track where we can test our algorithms. 
 
     To address our particular instance of the lane detection and keeping problem, we propose a
-    semi-original strategy which is based on a camera-based estimator and a controller working together. The
+     strategy which is based on a camera-based estimator and a controller working together. The
     estimator is a convolutional neural network trained in the given simulation environment, that
     has as estimation target the heading error of the vehicle with respect to the centerline. The
     controller is a partially modified pursuit controller \citep*{purepursuit}, which uses the
     estimated heading error as input. The controller is not object of this thesis, but have been
-    extensively tested and improved by the work of my colleague and friend, Antonio Gallina, in his thesis.
+     extensively tested and improved by the work of Antonio Gallina, in his thesis,
+     \textit{Development of a pure pursuit lane keeping controller for a 1:10 scale autonomous vehicle}.
 
-    The main objective of this thesis is to develop a camera-based and gps-denied estimation strategy, capable of running on
-    the embedded device that, together with the appropriate controller, is capable
-    of keeping the autonomous vehicle in the lane, and possibly tracking the center line. 
+    The main objective of this thesis is to develop a vision-based estimation strategy, capable of running on
+    an embedded device that, together with the appropriate controller, is capable
+    of keeping the autonomous vehicle in the lane, and tracking the center line in a
+    gps-denied environment. 
 
-    We will start by analyzing the context of the problem: from the vehicle model and controller, to the simulation environment we
-    used to test the algorithms, to the discussion about the optimal path to follow and performance
-    metrics used to evaluate the estimation accuracy. We will settle on a clothoid-based centerline
+    The proposed approach is based on a clothoid-based centerline
     interpolation for its several advantages and with the standard deviation as the performance
     metric of choice for its simplicity and effectiveness in our particular scenario.
 
-    We will then discuss the proposed estimation method, explaining the data collection process in
-    the simulator, the dataset generation and the training process in details, explaining the
-    various parameters used and the reasons behind them. 
+    The second part is dedicated to the description and implementation of the proposed approach,
+    from the data collection process in the simulator to the dataset generation and training of the
+    neural network. The different hyperparameters are introduced and the reasons behind their
+    initialization are discussed.
 
     In order to understand the importance of the various parameters, 
-    the proposed estimation method will be extensively tested in a real-world scenario and an
-    analysis on the most important hyperparameters will be performed, with respect to the estimation
-    capabilities and performance. We will discover how the learning parameters like the number of
-    epochs and learning rate will play a major role, but once those are fixed, the amount of
+    the proposed estimation method is extensively tested in a real-world scenario and an
+    analysis on the most important hyperparameters is performed, with respect to the estimation
+    capabilities and performance. From the analysis it emerges that the learning parameters like the number of
+    epochs and learning rate play a major role, but once those are fixed, the amount of
     steering noise in the training datasets and the distance ahead of the heading error also become
     important. 
 
-    Finally, the whole estimation and controller scheme will be tested in a standard control loop
-    application in a real-world scenario to evaluate the tracking performance. The strategy will perform
+    Finally, the whole estimation and controller scheme is tested in a standard control loop
+    application in a real-world scenario to evaluate the tracking performance. The strategy is found
+    to perform very
     well in both the analyzed scenarios, achieving perfect tracking at low speed and keeping the
     lane even at high speed.
 
@@ -243,7 +248,7 @@
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.8\linewidth]{imgs/bicycle_model.jpg}
+        \includegraphics[width=0.8\linewidth]{figures/bicycle_model.pdf}
         \caption{Bicycle model}
         \label{fig:bicycle_model}
     \end{figure}
@@ -297,7 +302,7 @@
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.7\linewidth]{imgs/heading_error.jpg}
+        \includegraphics[width=0.7\linewidth]{figures/heading_error.pdf}
         \caption{Heading Error}
         \label{fig:heading_error}
     \end{figure}
@@ -560,7 +565,7 @@
 
     \subsection{Metrics from the literature}
 
-    In the paper \citep*{6977166} we can see that in the analyzed methods, to evaluate performance,
+    In the survay paper of autonomous driving systems\citep*{6977166} we can see that in the analyzed methods, to evaluate performance,
     visual inspection of lane estimation is deployed in all studies. However, this is only a
     qualitative metric. In order to quantify the performance of a lane estimation technique, one of
     the most common metric is ego-vehicle position localization within the lane \citep*{1603550,cheng2007lane,6728507}.
@@ -675,7 +680,7 @@
 \newpage
 
 \section{Proposed estimation method}
-In this section we will present the proposed method for the estimation of the heading error. From a
+In this chapter we will present the proposed method for the estimation of the heading error. From a
 general point of view the process can be subdivided in 5 main steps that will be described in detail
 in the following subsections:
 \begin{enumerate}
@@ -722,7 +727,7 @@ use the same code for both the simulation and the real vehicle, where we also im
 The main steps of the original method are the following:
 \begin{itemize}
     \item A training path is generated for the car to follow, this path is based on the
-    aforementioned Clothoid interpolation and slides across all the different sections of the map in
+    aforementioned Clothoid interpolation and travels across all the different sections of the map in
     order to allow the car to encounter a good variety of situations.
     \item The car is controlled with a PP controller at a fixed speed. 
     \item The point ahead for the controller is selected by finding the closest point of the vehicle
@@ -795,6 +800,8 @@ the images. To achieve this, we apported a series of modifications:
 %         -(camera orientation, requires redoing all videos)
 %         -(camera position, requires redoing all videos)
 
+\clearpage
+
 \subsubsection*{Heading error calculation}
     In order to precisely calculate the heading error an algorithm has been developed that is a
     direct implementation of the common heading error definition in the PP controller
@@ -839,7 +846,7 @@ the images. To achieve this, we apported a series of modifications:
 
     \begin{figure}
         \centering
-        \includegraphics[width=0.6\linewidth]{imgs/he_calc.jpg}
+        \includegraphics[width=0.6\linewidth]{figures/he_calc.pdf}
         \caption{Heading error calculation}
         \label{fig:heading_error_calculation}
     \end{figure}
@@ -1107,7 +1114,7 @@ the images. To achieve this, we apported a series of modifications:
         \centering
         \begin{subfigure}[c]{\textwidth}
             \centering
-            \includegraphics[width=\textwidth]{imgs/vehicle_assembly2.png}
+            \includegraphics[width=\textwidth]{imgs/vehicle_assembly2.jpg}
         \end{subfigure}
         \begin{subfigure}[c]{\textwidth}
             \centering
@@ -1236,6 +1243,8 @@ the images. To achieve this, we apported a series of modifications:
     %     -image augmentation
     %         -noise level
     %         -
+
+\clearpage
 
 \subsection{Evaluation datasets analysis}
 To generate the real datasets we used the same process as the one used to generate the simulated
@@ -1660,7 +1669,7 @@ The main concepts we dealt with in this thesis and their respective most importa
     \item \textbf{Application in closed loop control scheme}: When testing the vehicle capabilities
     in the test track in the university laboratory and at the competition track, the whole
     estimation and control strategy worked very well and was able to keep the lane even at high speed.
-\end{itemize}
+\end{itemize} 
 
 
 \subsection{Future Work}
